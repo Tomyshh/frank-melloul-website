@@ -34,15 +34,16 @@ export const metadata: Metadata = {
     "international affairs",
   ],
   authors: [{ name: "Frank Melloul" }],
+  metadataBase: new URL("https://frank-melloul-website.onrender.com"),
   icons: {
     icon: [
-      { url: "/logo-blue.png", sizes: "32x32", type: "image/png" },
-      { url: "/logo-blue.png", sizes: "16x16", type: "image/png" },
+      { url: "/only_gold_logo.png", sizes: "32x32", type: "image/png" },
+      { url: "/only_gold_logo.png", sizes: "16x16", type: "image/png" },
     ],
     apple: [
-      { url: "/logo-blue.png", sizes: "180x180", type: "image/png" },
+      { url: "/only_gold_logo.png", sizes: "180x180", type: "image/png" },
     ],
-    shortcut: "/logo-blue.png",
+    shortcut: "/only_gold_logo.png",
   },
   openGraph: {
     title: "Melloul & Partners | Global Advisory",
@@ -50,6 +51,20 @@ export const metadata: Metadata = {
       "Global strategic advisory firm. Strategies for Influence and Diplomacy.",
     type: "website",
     locale: "en_US",
+    images: [
+      {
+        url: "/logo-gold.png",
+        width: 1200,
+        height: 630,
+        alt: "Melloul & Partners Logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Melloul & Partners | Global Advisory",
+    description: "Global strategic advisory firm. Strategies for Influence and Diplomacy.",
+    images: ["/logo-gold.png"],
   },
 };
 
