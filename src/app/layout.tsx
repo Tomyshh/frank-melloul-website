@@ -33,6 +33,10 @@ export const metadata: Metadata = {
     "international affairs",
   ],
   authors: [{ name: "Frank Melloul" }],
+  icons: {
+    icon: "/logo-blue.png",
+    apple: "/logo-blue.png",
+  },
   openGraph: {
     title: "Melloul & Partners | Global Advisory",
     description:
