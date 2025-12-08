@@ -12,7 +12,7 @@ import { translations, Locale, Translations } from "@/lib/translations";
 interface LanguageContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: Translations;
+  t: typeof translations[Locale];
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
