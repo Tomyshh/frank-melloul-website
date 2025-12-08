@@ -48,7 +48,12 @@ export default function LoadingScreen() {
                 width={180}
                 height={180}
                 priority
+                fetchPriority="high"
+                loading="eager"
                 className="object-contain"
+                unoptimized={false}
+                placeholder="blur"
+                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
               />
             </motion.div>
 

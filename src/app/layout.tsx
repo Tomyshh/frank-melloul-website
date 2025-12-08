@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+import PreloadResources from "@/components/PreloadResources";
 
 // Dynamic imports for client-side only components (reduces initial bundle)
 const SmoothScrollProvider = dynamic(
@@ -34,8 +35,14 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Frank Melloul" }],
   icons: {
-    icon: "/logo-blue.png",
-    apple: "/logo-blue.png",
+    icon: [
+      { url: "/logo-blue.png", sizes: "32x32", type: "image/png" },
+      { url: "/logo-blue.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/logo-blue.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: "/logo-blue.png",
   },
   openGraph: {
     title: "Melloul & Partners | Global Advisory",
@@ -53,7 +60,37 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Inline script for immediate preload - executes before React hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (!document.querySelector('link[rel="preload"][href="/logo-gold.png"]')) {
+                  const link1 = document.createElement('link');
+                  link1.rel = 'preload';
+                  link1.href = '/logo-gold.png';
+                  link1.as = 'image';
+                  link1.type = 'image/png';
+                  link1.setAttribute('fetchpriority', 'high');
+                  document.head.appendChild(link1);
+                }
+                if (!document.querySelector('link[rel="preload"][href="/logo-blue.png"]')) {
+                  const link2 = document.createElement('link');
+                  link2.rel = 'preload';
+                  link2.href = '/logo-blue.png';
+                  link2.as = 'image';
+                  link2.type = 'image/png';
+                  link2.setAttribute('fetchpriority', 'high');
+                  document.head.appendChild(link2);
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="antialiased">
+        <PreloadResources />
         <LanguageProvider>
           <LoadingScreen />
           <CustomCursor />
