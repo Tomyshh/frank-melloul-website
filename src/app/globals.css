@@ -359,3 +359,34 @@ body {
 .stagger-5 { animation-delay: 0.5s; }
 .stagger-6 { animation-delay: 0.6s; }
 
+/* Optimized CSS animations for decorative elements */
+@keyframes pulseSlow {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+}
+
+@keyframes pulseSlower {
+  0%, 100% { transform: scale(1.2); opacity: 0.3; }
+  50% { transform: scale(1); opacity: 0.5; }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 8s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.animate-pulse-slower {
+  animation: pulseSlower 10s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* Arrow bounce animation */
+@keyframes arrowBounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+
+.animate-arrow-bounce {
+  animation: arrowBounce 1.5s ease-in-out infinite;
+}
+

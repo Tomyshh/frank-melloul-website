@@ -46,11 +46,12 @@ export default function Header() {
                 transition={{ duration: 0.3 }}
               >
                 <Image
-                  src="/Melloul & Partners_Logo_Gold.png"
+                  src="/logo-gold.png"
                   alt="Melloul & Partners"
                   width={80}
                   height={80}
                   className="object-contain"
+                  priority
                 />
               </motion.div>
             </Link>
@@ -95,13 +96,7 @@ export default function Header() {
                 >
                   <span className="w-8 h-[1px] bg-gold-500 group-hover:w-12 transition-all duration-300" />
                   {t.nav.contact}
-                  <motion.span
-                    className="inline-block"
-                    animate={{ x: [0, 4, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    →
-                  </motion.span>
+                  <span className="inline-block animate-arrow-bounce">→</span>
                 </Link>
               </motion.div>
             </div>

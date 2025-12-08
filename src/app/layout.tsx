@@ -1,9 +1,23 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import "./globals.css";
-import SmoothScrollProvider from "@/components/SmoothScrollProvider";
-import CustomCursor from "@/components/CustomCursor";
-import LoadingScreen from "@/components/LoadingScreen";
 import { LanguageProvider } from "@/context/LanguageContext";
+
+// Dynamic imports for client-side only components (reduces initial bundle)
+const SmoothScrollProvider = dynamic(
+  () => import("@/components/SmoothScrollProvider"),
+  { ssr: false }
+);
+
+const CustomCursor = dynamic(
+  () => import("@/components/CustomCursor"),
+  { ssr: false }
+);
+
+const LoadingScreen = dynamic(
+  () => import("@/components/LoadingScreen"),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: "Melloul & Partners | Global Advisory - Strategies for Influence and Diplomacy",

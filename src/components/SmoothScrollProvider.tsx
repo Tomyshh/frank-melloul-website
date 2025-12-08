@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, ReactNode } from "react";
+import { useEffect, useRef, ReactNode, useCallback } from "react";
 import Lenis from "@studio-freight/lenis";
 
 interface SmoothScrollProviderProps {
@@ -11,8 +11,20 @@ export default function SmoothScrollProvider({
   children,
 }: SmoothScrollProviderProps) {
   const lenisRef = useRef<Lenis | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  const raf = useCallback((time: number) => {
+    if (lenisRef.current) {
+      lenisRef.current.raf(time);
+      rafRef.current = requestAnimationFrame(raf);
+    }
+  }, []);
 
   useEffect(() => {
+    // Skip on mobile for better performance
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return;
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -23,13 +35,7 @@ export default function SmoothScrollProvider({
     });
 
     lenisRef.current = lenis;
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
+    rafRef.current = requestAnimationFrame(raf);
 
     // Handle anchor links
     const handleAnchorClick = (e: MouseEvent) => {
@@ -50,10 +56,16 @@ export default function SmoothScrollProvider({
     document.addEventListener("click", handleAnchorClick);
 
     return () => {
+      // Cancel animation frame to prevent memory leak
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
       lenis.destroy();
+      lenisRef.current = null;
       document.removeEventListener("click", handleAnchorClick);
     };
-  }, []);
+  }, [raf]);
 
   return <>{children}</>;
 }

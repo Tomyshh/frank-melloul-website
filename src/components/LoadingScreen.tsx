@@ -43,7 +43,7 @@ export default function LoadingScreen() {
               }}
             >
               <Image
-                src="/Melloul & Partners_Logo_Gold.png"
+                src="/logo-gold.png"
                 alt="Melloul & Partners"
                 width={180}
                 height={180}

@@ -1,11 +1,23 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo, memo } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import gsap from "gsap";
 import { useLanguage } from "@/context/LanguageContext";
 
-export default function HeroSection() {
+// Pre-computed particle positions for performance (reduced from 20 to 8)
+const PARTICLES = [
+  { left: 15, top: 20, duration: 6, delay: 0 },
+  { left: 45, top: 35, duration: 7, delay: 1 },
+  { left: 75, top: 15, duration: 8, delay: 2 },
+  { left: 25, top: 70, duration: 6.5, delay: 1.5 },
+  { left: 85, top: 55, duration: 7.5, delay: 0.5 },
+  { left: 55, top: 80, duration: 6, delay: 2.5 },
+  { left: 10, top: 50, duration: 8, delay: 3 },
+  { left: 65, top: 45, duration: 7, delay: 1.8 },
+];
+
+function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const { t } = useLanguage();
@@ -21,21 +33,22 @@ export default function HeroSection() {
   useEffect(() => {
     if (titleRef.current) {
       const words = titleRef.current.querySelectorAll(".word");
-
-      gsap.set(words, { opacity: 0, y: 50 });
-
-      gsap.to(words, {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        stagger: 0.1,
-        ease: "power3.out",
-        delay: 2.3,
+      const ctx = gsap.context(() => {
+        gsap.set(words, { opacity: 0, y: 50 });
+        gsap.to(words, {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          stagger: 0.1,
+          ease: "power3.out",
+          delay: 2.3,
+        });
       });
+      return () => ctx.revert();
     }
   }, [t]);
 
-  const words = t.hero.title.split(" ");
+  const words = useMemo(() => t.hero.title.split(" "), [t.hero.title]);
   const highlightWords = t.hero.highlightWords;
 
   return (
@@ -46,24 +59,24 @@ export default function HeroSection() {
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-navy-950 via-navy-900 to-navy-950" />
 
-      {/* Animated background particles */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
+      {/* Animated background particles - optimized with fixed positions */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {PARTICLES.map((particle, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-gold-500/20 rounded-full"
+            className="absolute w-1 h-1 bg-gold-500/20 rounded-full will-change-transform"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
             }}
             animate={{
               y: [0, -100, 0],
               opacity: [0, 1, 0],
             }}
             transition={{
-              duration: 5 + Math.random() * 5,
+              duration: particle.duration,
               repeat: Infinity,
-              delay: Math.random() * 5,
+              delay: particle.delay,
               ease: "easeInOut",
             }}
           />
@@ -146,32 +159,24 @@ export default function HeroSection() {
         </motion.div>
       </motion.div>
 
-      {/* Decorative elements */}
-      <motion.div
-        className="absolute top-1/4 right-10 w-72 h-72 rounded-full"
+      {/* Decorative elements - CSS animations for better performance */}
+      <div
+        className="absolute top-1/4 right-10 w-72 h-72 rounded-full animate-pulse-slow pointer-events-none"
         style={{
           background:
             "radial-gradient(circle, rgba(201, 162, 19, 0.05) 0%, transparent 70%)",
         }}
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.3, 0.5, 0.3],
-        }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      <motion.div
-        className="absolute bottom-1/4 left-10 w-96 h-96 rounded-full"
+      <div
+        className="absolute bottom-1/4 left-10 w-96 h-96 rounded-full animate-pulse-slower pointer-events-none"
         style={{
           background:
             "radial-gradient(circle, rgba(201, 162, 19, 0.03) 0%, transparent 70%)",
         }}
-        animate={{
-          scale: [1.2, 1, 1.2],
-          opacity: [0.3, 0.5, 0.3],
-        }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
     </section>
   );
 }
+
+export default memo(HeroSection);

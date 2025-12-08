@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import { motion, useSpring, useMotionValue } from "framer-motion";
 
-export default function CustomCursor() {
+function CustomCursor() {
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(true);
 
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -14,46 +15,62 @@ export default function CustomCursor() {
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
 
+  const handleHoverStart = useCallback(() => setIsHovering(true), []);
+  const handleHoverEnd = useCallback(() => setIsHovering(false), []);
+
   useEffect(() => {
+    // Check for touch device on client side only
+    const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(isTouch);
+    
+    if (isTouch) return;
+
     const moveCursor = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
-      setIsVisible(true);
+      if (!isVisible) setIsVisible(true);
     };
 
-    const handleMouseEnter = () => setIsVisible(true);
     const handleMouseLeave = () => setIsVisible(false);
+    const handleMouseEnter = () => setIsVisible(true);
 
-    const handleHoverStart = () => setIsHovering(true);
-    const handleHoverEnd = () => setIsHovering(false);
-
-    window.addEventListener("mousemove", moveCursor);
-    document.addEventListener("mouseenter", handleMouseEnter);
+    window.addEventListener("mousemove", moveCursor, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mouseenter", handleMouseEnter);
 
-    const interactiveElements = document.querySelectorAll(
-      'a, button, [role="button"], input, textarea, select, .magnetic-button'
-    );
+    // Use event delegation instead of attaching to each element
+    const handleDocumentMouseOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('a, button, [role="button"], input, textarea, select, .magnetic-button')) {
+        handleHoverStart();
+      }
+    };
 
-    interactiveElements.forEach((el) => {
-      el.addEventListener("mouseenter", handleHoverStart);
-      el.addEventListener("mouseleave", handleHoverEnd);
-    });
+    const handleDocumentMouseOut = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const relatedTarget = e.relatedTarget as HTMLElement | null;
+      if (
+        target.closest('a, button, [role="button"], input, textarea, select, .magnetic-button') &&
+        !relatedTarget?.closest('a, button, [role="button"], input, textarea, select, .magnetic-button')
+      ) {
+        handleHoverEnd();
+      }
+    };
+
+    document.addEventListener("mouseover", handleDocumentMouseOver, { passive: true });
+    document.addEventListener("mouseout", handleDocumentMouseOut, { passive: true });
 
     return () => {
       window.removeEventListener("mousemove", moveCursor);
-      document.removeEventListener("mouseenter", handleMouseEnter);
       document.removeEventListener("mouseleave", handleMouseLeave);
-
-      interactiveElements.forEach((el) => {
-        el.removeEventListener("mouseenter", handleHoverStart);
-        el.removeEventListener("mouseleave", handleHoverEnd);
-      });
+      document.removeEventListener("mouseenter", handleMouseEnter);
+      document.removeEventListener("mouseover", handleDocumentMouseOver);
+      document.removeEventListener("mouseout", handleDocumentMouseOut);
     };
-  }, [cursorX, cursorY]);
+  }, [cursorX, cursorY, isVisible, handleHoverStart, handleHoverEnd]);
 
-  // Don't render on mobile/touch devices
-  if (typeof window !== "undefined" && "ontouchstart" in window) {
+  // Don't render on touch devices
+  if (isTouchDevice) {
     return null;
   }
 
@@ -96,4 +113,6 @@ export default function CustomCursor() {
     </>
   );
 }
+
+export default memo(CustomCursor);
 

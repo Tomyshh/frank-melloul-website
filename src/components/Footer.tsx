@@ -20,7 +20,7 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <Image
-              src="/Melloul & Partners_Logo_Gold.png"
+              src="/logo-gold.png"
               alt="Melloul & Partners"
               width={120}
               height={120}
