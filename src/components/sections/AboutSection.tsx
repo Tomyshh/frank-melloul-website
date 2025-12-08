@@ -53,32 +53,31 @@ export default function AboutSection() {
           </h2>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
-          {/* Left column - Main statement */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={isInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <p className="text-lg md:text-xl font-serif text-primary-100/90 leading-relaxed">
-              {t.about.mainText}
-            </p>
-          </motion.div>
+        {/* Main statement - Full width */}
+        <motion.div
+          className="mb-12 lg:mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <p className="text-xl md:text-2xl lg:text-3xl font-serif text-primary-100/90 leading-relaxed max-w-4xl">
+            {t.about.mainText}
+          </p>
+        </motion.div>
 
-          {/* Right column - Details */}
-          <div className="space-y-6">
-            {t.about.paragraphs.map((paragraph, index) => (
-              <motion.p
-                key={index}
-                className="text-primary-300 leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
-              >
-                {paragraph}
-              </motion.p>
-            ))}
-          </div>
+        {/* Details - Two columns on desktop */}
+        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          {t.about.paragraphs.map((paragraph, index) => (
+            <motion.p
+              key={index}
+              className="text-primary-300 leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+            >
+              {paragraph}
+            </motion.p>
+          ))}
         </div>
 
         {/* Key values */}
