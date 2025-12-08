@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -47,18 +46,13 @@ export default function Header() {
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.3 }}
               >
-                <Image
+                {/* Using native img to avoid Next.js image optimization placeholder */}
+                <img
                   src="/logo-gold.png"
                   alt="Melloul & Partners"
                   width={80}
                   height={80}
-                  className="object-contain"
-                  priority
-                  fetchPriority="high"
-                  loading="eager"
-                  unoptimized={false}
-                  placeholder="blur"
-                  blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                  style={{ objectFit: "contain" }}
                 />
               </motion.div>
             </Link>

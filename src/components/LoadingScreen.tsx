@@ -2,10 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
 
 export default function LoadingScreen() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isLogoLoaded, setIsLogoLoaded] = useState(false);
+
+  useEffect(() => {
+    // Preload the logo image
+    const img = new window.Image();
+    img.src = "/logo-gold.png";
+    img.onload = () => setIsLogoLoaded(true);
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -26,7 +33,7 @@ export default function LoadingScreen() {
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: isLogoLoaded ? 1 : 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.5 }}
             className="relative"
@@ -42,18 +49,13 @@ export default function LoadingScreen() {
                 ease: "easeInOut",
               }}
             >
-              <Image
+              {/* Using native img to avoid Next.js image optimization placeholder */}
+              <img
                 src="/logo-gold.png"
                 alt="Melloul & Partners"
                 width={180}
                 height={180}
-                priority
-                fetchPriority="high"
-                loading="eager"
-                className="object-contain"
-                unoptimized={false}
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+                style={{ objectFit: "contain" }}
               />
             </motion.div>
 
