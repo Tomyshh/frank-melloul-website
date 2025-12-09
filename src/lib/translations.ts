@@ -7,6 +7,7 @@ export const translations = {
       services: "Services",
       about: "About",
       biography: "Biography",
+      communication: "Communication",
       contact: "Contact",
     },
     // Hero
@@ -55,7 +56,7 @@ export const translations = {
     about: {
       title: "About",
       mainText:
-        "Melloul & Partners is a global strategic advisory and market entry facilitation firm based between Paris, Tel Aviv and Dubai.",
+        "Melloul & Partners is a global strategic advisory and market entry facilitation firm based between Paris and Dubai.",
       paragraphs: [
         "We operate at the intersection of business opportunity and strategic communications, drawing on the expertise of seasoned strategists, business and sovereign leaders, legal advisors, public affairs professionals, and academics.",
         "We enable our clients to access complex markets, make informed decisions, and forge enduring partnerships.",
@@ -107,7 +108,7 @@ export const translations = {
       button: "Contact Us",
       email: "Email",
       location: "Location",
-      locationValue: "Paris • Tel Aviv • Dubai",
+      locationValue: "Paris • Dubai",
     },
     // Footer
     footer: {
@@ -120,6 +121,7 @@ export const translations = {
       services: "Services",
       about: "À Propos",
       biography: "Biographie",
+      communication: "Communication",
       contact: "Contact",
     },
     // Hero
@@ -168,7 +170,7 @@ export const translations = {
     about: {
       title: "À Propos",
       mainText:
-        "Melloul & Partners est un cabinet de conseil stratégique et de facilitation d'entrée sur les marchés, basé entre Paris, Tel Aviv et Dubaï.",
+        "Melloul & Partners est un cabinet de conseil stratégique et de facilitation d'entrée sur les marchés, basé entre Paris et Dubaï.",
       paragraphs: [
         "Nous opérons à l'intersection des opportunités commerciales et de la communication stratégique, en nous appuyant sur l'expertise de stratèges chevronnés, de leaders d'affaires et souverains, de conseillers juridiques, de professionnels des affaires publiques et d'universitaires.",
         "Nous permettons à nos clients d'accéder à des marchés complexes, de prendre des décisions éclairées et de nouer des partenariats durables.",
@@ -220,7 +222,7 @@ export const translations = {
       button: "Nous Contacter",
       email: "Email",
       location: "Localisation",
-      locationValue: "Paris • Tel Aviv • Dubai",
+      locationValue: "Paris • Dubai",
     },
     // Footer
     footer: {

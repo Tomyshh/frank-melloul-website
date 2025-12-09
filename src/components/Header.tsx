@@ -21,9 +21,10 @@ export default function Header() {
   }, []);
 
   const navItems = [
-    { name: t.nav.services, href: "#services" },
     { name: t.nav.about, href: "#about" },
+    { name: t.nav.services, href: "#services" },
     { name: t.nav.biography, href: "#biography" },
+    { name: t.nav.communication, href: "/communication" },
   ];
 
   return (
@@ -48,10 +49,10 @@ export default function Header() {
               >
                 {/* Using native img to avoid Next.js image optimization placeholder */}
                 <img
-                  src="/logo-gold.png"
+                  src="/only_gold_logo.png"
                   alt="Melloul & Partners"
-                  width={80}
-                  height={80}
+                  width={160}
+                  height={160}
                   style={{ objectFit: "contain" }}
                 />
               </motion.div>

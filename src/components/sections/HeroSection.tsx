@@ -91,21 +91,23 @@ function HeroSection() {
         <div className="max-w-5xl">
           {/* Company name with special styling */}
           <motion.div
-            className="mb-8 flex items-center gap-4"
+            className="mb-8 flex items-center gap-6"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 2.1 }}
           >
-            <span className="text-gold-400 font-sans text-base md:text-lg tracking-[0.3em] uppercase">
+            <span className="text-gold-400 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.2em] uppercase font-medium">
               {t.hero.companyName}
             </span>
-            <span className="w-12 h-[1px] bg-gold-400" />
+            <span className="text-primary-200 font-sans text-xl md:text-2xl lg:text-3xl tracking-[0.15em] uppercase">
+              Global Advisory
+            </span>
           </motion.div>
 
-          {/* Main title */}
+          {/* Main title - reduced size */}
           <h1
             ref={titleRef}
-            className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-serif font-light leading-[1.2] tracking-tight text-primary-100/90"
+            className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-serif font-light leading-[1.3] tracking-tight text-primary-100/90"
           >
             {words.map((word, index) => {
               const isHighlight = highlightWords.some(

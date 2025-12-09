@@ -10,7 +10,7 @@ export default function LoadingScreen() {
   useEffect(() => {
     // Preload the logo image
     const img = new window.Image();
-    img.src = "/logo-gold.png";
+    img.src = "/only_gold_logo.png";
     img.onload = () => setIsLogoLoaded(true);
   }, []);
 
@@ -51,10 +51,10 @@ export default function LoadingScreen() {
             >
               {/* Using native img to avoid Next.js image optimization placeholder */}
               <img
-                src="/logo-gold.png"
+                src="/only_gold_logo.png"
                 alt="Melloul & Partners"
-                width={180}
-                height={180}
+                width={360}
+                height={360}
                 style={{ objectFit: "contain" }}
               />
             </motion.div>

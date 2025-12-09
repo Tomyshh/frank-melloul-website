@@ -10,10 +10,6 @@ const SmoothScrollProvider = dynamic(
   { ssr: false }
 );
 
-const CustomCursor = dynamic(
-  () => import("@/components/CustomCursor"),
-  { ssr: false }
-);
 
 const LoadingScreen = dynamic(
   () => import("@/components/LoadingScreen"),
@@ -53,7 +49,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     images: [
       {
-        url: "/logo-gold.png",
+        url: "/only_gold_logo.png",
         width: 1200,
         height: 630,
         alt: "Melloul & Partners Logo",
@@ -64,7 +60,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Melloul & Partners | Global Advisory",
     description: "Global strategic advisory firm. Strategies for Influence and Diplomacy.",
-    images: ["/logo-gold.png"],
+    images: ["/only_gold_logo.png"],
   },
 };
 
@@ -81,23 +77,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                if (!document.querySelector('link[rel="preload"][href="/logo-gold.png"]')) {
+                if (!document.querySelector('link[rel="preload"][href="/only_gold_logo.png"]')) {
                   const link1 = document.createElement('link');
                   link1.rel = 'preload';
-                  link1.href = '/logo-gold.png';
+                  link1.href = '/only_gold_logo.png';
                   link1.as = 'image';
                   link1.type = 'image/png';
                   link1.setAttribute('fetchpriority', 'high');
                   document.head.appendChild(link1);
-                }
-                if (!document.querySelector('link[rel="preload"][href="/logo-blue.png"]')) {
-                  const link2 = document.createElement('link');
-                  link2.rel = 'preload';
-                  link2.href = '/logo-blue.png';
-                  link2.as = 'image';
-                  link2.type = 'image/png';
-                  link2.setAttribute('fetchpriority', 'high');
-                  document.head.appendChild(link2);
                 }
               })();
             `,
@@ -108,7 +95,6 @@ export default function RootLayout({
         <PreloadResources />
         <LanguageProvider>
           <LoadingScreen />
-          <CustomCursor />
           <SmoothScrollProvider>
             {children}
           </SmoothScrollProvider>

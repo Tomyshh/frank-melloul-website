@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -19,12 +18,12 @@ export default function Footer() {
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <Image
-              src="/logo-gold.png"
+            <img
+              src="/only_gold_logo.png"
               alt="Melloul & Partners"
-              width={120}
-              height={120}
-              className="object-contain"
+              width={240}
+              height={240}
+              style={{ objectFit: "contain" }}
             />
           </motion.div>
 
