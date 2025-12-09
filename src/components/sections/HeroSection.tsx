@@ -38,10 +38,10 @@ function HeroSection() {
         gsap.to(words, {
           opacity: 1,
           y: 0,
-          duration: 1,
-          stagger: 0.1,
+          duration: 0.8,
+          stagger: 0.05,
           ease: "power3.out",
-          delay: 2.3,
+          delay: 1.2,
         });
       });
       return () => ctx.revert();
@@ -94,7 +94,7 @@ function HeroSection() {
             className="mb-8 flex items-center gap-6"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 2.1 }}
+            transition={{ duration: 0.6, delay: 1.1 }}
           >
             <span className="text-gold-400 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.2em] uppercase font-medium">
               {t.hero.companyName}
@@ -135,7 +135,7 @@ function HeroSection() {
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 3.5 }}
+        transition={{ delay: 2 }}
       >
         <motion.div
           className="flex flex-col items-center gap-2"

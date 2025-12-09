@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,9 +10,16 @@ import LanguageSwitcher from "./LanguageSwitcher";
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
   const { t } = useLanguage();
   const pathname = usePathname();
   const isHomePage = pathname === "/";
+
+  // Mark animations as complete after first render
+  useEffect(() => {
+    const timer = setTimeout(() => setHasAnimated(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -55,7 +62,7 @@ export default function Header() {
         }`}
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, delay: 2, ease: [0.76, 0, 0.24, 1] }}
+        transition={{ duration: 0.6, delay: 1, ease: [0.76, 0, 0.24, 1] }}
       >
         <div className="container mx-auto px-6 md:px-12 lg:px-20">
           <div className="flex items-center justify-between">
@@ -69,8 +76,8 @@ export default function Header() {
                 <img
                   src="/only_gold_logo.png"
                   alt="Melloul & Partners"
-                  width={160}
-                  height={160}
+                  width={120}
+                  height={120}
                   style={{ objectFit: "contain" }}
                 />
               </motion.div>
@@ -80,10 +87,10 @@ export default function Header() {
             <nav className="hidden md:flex items-center gap-12">
               {navItems.map((item, index) => (
                 <motion.div
-                  key={item.name}
-                  initial={{ opacity: 0, y: -20 }}
+                  key={item.href}
+                  initial={hasAnimated ? false : { opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 2.2 + index * 0.1 }}
+                  transition={{ duration: 0.4, delay: hasAnimated ? 0 : 1.1 + index * 0.05 }}
                 >
                   <Link
                     href={item.href}
@@ -98,17 +105,17 @@ export default function Header() {
             {/* Right side: Language Switcher + Contact */}
             <div className="hidden md:flex items-center gap-6">
               <motion.div
-                initial={{ opacity: 0, y: -20 }}
+                initial={hasAnimated ? false : { opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 2.5 }}
+                transition={{ duration: 0.4, delay: hasAnimated ? 0 : 1.3 }}
               >
                 <LanguageSwitcher />
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: -20 }}
+                initial={hasAnimated ? false : { opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 2.6 }}
+                transition={{ duration: 0.4, delay: hasAnimated ? 0 : 1.4 }}
               >
                 <Link
                   href="mailto:contact@melloulpartners.com"
@@ -127,9 +134,9 @@ export default function Header() {
               <motion.button
                 className="relative z-10 w-10 h-10 flex flex-col items-center justify-center gap-1.5"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                initial={{ opacity: 0 }}
+                initial={hasAnimated ? false : { opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 2 }}
+                transition={{ delay: hasAnimated ? 0 : 1 }}
               >
                 <motion.span
                   className="w-6 h-[2px] bg-primary-200"

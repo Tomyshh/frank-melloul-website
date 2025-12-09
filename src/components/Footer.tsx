@@ -21,8 +21,8 @@ export default function Footer() {
             <img
               src="/only_gold_logo.png"
               alt="Melloul & Partners"
-              width={240}
-              height={240}
+              width={180}
+              height={180}
               style={{ objectFit: "contain" }}
             />
           </motion.div>

@@ -17,7 +17,7 @@ export default function LoadingScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 2000);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -29,7 +29,7 @@ export default function LoadingScreen() {
           className="fixed inset-0 bg-navy-950 z-[10000] flex items-center justify-center"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: [0.76, 0, 0.24, 1] }}
+          transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -53,8 +53,8 @@ export default function LoadingScreen() {
               <img
                 src="/only_gold_logo.png"
                 alt="Melloul & Partners"
-                width={360}
-                height={360}
+                width={250}
+                height={250}
                 style={{ objectFit: "contain" }}
               />
             </motion.div>
