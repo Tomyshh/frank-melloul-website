@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
 
@@ -10,6 +11,8 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
+  const pathname = usePathname();
+  const isHomePage = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,10 +23,25 @@ export default function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Handle smooth scroll to section when navigating from another page
+  useEffect(() => {
+    if (isHomePage && window.location.hash) {
+      const hash = window.location.hash;
+      // Small delay to ensure the page is fully loaded
+      setTimeout(() => {
+        const element = document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    }
+  }, [isHomePage]);
+
+  // Build navigation items with proper links based on current page
   const navItems = [
-    { name: t.nav.about, href: "#about" },
-    { name: t.nav.services, href: "#services" },
-    { name: t.nav.biography, href: "#biography" },
+    { name: t.nav.about, href: isHomePage ? "#about" : "/#about" },
+    { name: t.nav.services, href: isHomePage ? "#services" : "/#services" },
+    { name: t.nav.biography, href: isHomePage ? "#biography" : "/#biography" },
     { name: t.nav.communication, href: "/communication" },
   ];
 
