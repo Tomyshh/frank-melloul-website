@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useMemo, memo } from "react";
+import { useRef, memo } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
-import gsap from "gsap";
 import { useLanguage } from "@/context/LanguageContext";
 
 // Pre-computed particle positions for performance (reduced from 20 to 8)
@@ -19,7 +18,6 @@ const PARTICLES = [
 
 function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
   const { t } = useLanguage();
 
   const { scrollYProgress } = useScroll({
@@ -29,27 +27,6 @@ function HeroSection() {
 
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
-  useEffect(() => {
-    if (titleRef.current) {
-      const words = titleRef.current.querySelectorAll(".word");
-      const ctx = gsap.context(() => {
-        gsap.set(words, { opacity: 0, y: 50 });
-        gsap.to(words, {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          stagger: 0.05,
-          ease: "power3.out",
-          delay: 1.2,
-        });
-      });
-      return () => ctx.revert();
-    }
-  }, [t]);
-
-  const words = useMemo(() => t.hero.title.split(" "), [t.hero.title]);
-  const highlightWords = t.hero.highlightWords;
 
   return (
     <section
@@ -85,48 +62,39 @@ function HeroSection() {
 
       {/* Content */}
       <motion.div
-        className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10"
+        className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10 flex items-center justify-center min-h-[60vh]"
         style={{ y, opacity }}
       >
-        <div className="max-w-5xl">
-          {/* Company name with special styling */}
+        <div className="text-center">
+          {/* Company name with special styling - centered */}
           <motion.div
-            className="mb-8 flex items-center gap-6"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
+            className="mb-4 flex flex-col items-center gap-2"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.1 }}
           >
-            <span className="text-gold-400 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.2em] uppercase font-medium">
-              {t.hero.companyName}
-            </span>
-            <span className="text-primary-200 font-sans text-xl md:text-2xl lg:text-3xl tracking-[0.15em] uppercase">
-              Global Advisory
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-gold-400 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.15em] font-medium">
+                Melloul and Partners
+              </span>
+              <span className="text-primary-200 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.15em]">
+                Global Advisory
+              </span>
+            </div>
           </motion.div>
 
-          {/* Main title - reduced size */}
-          <h1
-            ref={titleRef}
-            className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-serif font-light leading-[1.3] tracking-tight text-primary-100/90"
+          {/* Tagline - Strategy for Influence and Diplomacy */}
+          <motion.p
+            className="text-lg md:text-xl lg:text-2xl font-serif font-light tracking-wide"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.3 }}
           >
-            {words.map((word, index) => {
-              const isHighlight = highlightWords.some(
-                (hw) => word.toLowerCase().startsWith(hw.toLowerCase().replace(",", ""))
-              );
-              return (
-                <span
-                  key={index}
-                  className="word inline-block mr-[0.25em]"
-                  style={{
-                    color: isHighlight ? "#d4af37" : undefined,
-                    fontWeight: isHighlight ? 400 : 300,
-                  }}
-                >
-                  {word}
-                </span>
-              );
-            })}
-          </h1>
+            <span className="text-primary-100">Strategy for </span>
+            <span className="text-gold-400">Influence</span>
+            <span className="text-primary-100"> and </span>
+            <span className="text-gold-400">Diplomacy</span>
+          </motion.p>
         </div>
       </motion.div>
 

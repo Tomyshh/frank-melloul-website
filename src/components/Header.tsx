@@ -46,8 +46,8 @@ export default function Header() {
 
   // Build navigation items with proper links based on current page
   const navItems = [
-    { name: t.nav.about, href: isHomePage ? "#about" : "/#about" },
     { name: t.nav.services, href: isHomePage ? "#services" : "/#services" },
+    { name: t.nav.about, href: isHomePage ? "#about" : "/#about" },
     { name: t.nav.biography, href: isHomePage ? "#biography" : "/#biography" },
     { name: t.nav.communication, href: "/communication" },
   ];
