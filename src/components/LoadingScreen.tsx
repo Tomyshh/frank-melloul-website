@@ -17,7 +17,7 @@ export default function LoadingScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000);
+    }, 4000); // Augmenté à 4 secondes pour voir le logo arrêté quelques secondes
 
     return () => clearTimeout(timer);
   }, []);
@@ -40,14 +40,15 @@ export default function LoadingScreen() {
           >
             <motion.div
               animate={{
-                opacity: [0.4, 1, 0.4],
-                scale: [0.98, 1, 0.98],
+                opacity: [0.4, 1, 1, 1, 0.4], // Reste à 1 plus longtemps
+                scale: [0.98, 1, 1, 1, 0.98],
               }}
               transition={{
-                duration: 1.5,
+                duration: 3.5, // Animation plus longue
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
+              className="flex flex-col items-center gap-6"
             >
               {/* Using native img to avoid Next.js image optimization placeholder */}
               <img
@@ -57,6 +58,15 @@ export default function LoadingScreen() {
                 height={250}
                 style={{ objectFit: "contain" }}
               />
+              {/* Company name */}
+              <motion.h1
+                className="text-gold-400 font-sans text-2xl md:text-3xl tracking-[0.15em] font-medium"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              >
+                MELLOUL & Partners
+              </motion.h1>
             </motion.div>
 
             {/* Loading bar */}

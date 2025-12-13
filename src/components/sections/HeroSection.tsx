@@ -75,17 +75,14 @@ function HeroSection() {
           >
             <div className="flex items-center gap-3">
               <span className="text-gold-400 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.15em] font-medium">
-                Melloul and Partners
-              </span>
-              <span className="text-primary-200 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.15em]">
-                Global Advisory
+                MELLOUL & Partners
               </span>
             </div>
           </motion.div>
 
           {/* Tagline - Strategy for Influence and Diplomacy */}
           <motion.p
-            className="text-lg md:text-xl lg:text-2xl font-serif font-light tracking-wide"
+            className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-serif font-light tracking-wide"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.3 }}

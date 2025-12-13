@@ -42,7 +42,7 @@ export default function AboutSection() {
       <div className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10">
         {/* Section title */}
         <motion.div
-          className="flex items-center gap-4 mb-12"
+          className="flex items-center gap-4 mb-16"
           initial={{ opacity: 0, x: -30 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.8 }}
@@ -53,55 +53,66 @@ export default function AboutSection() {
           </h2>
         </motion.div>
 
-        {/* Main statement - Full width */}
-        <motion.div
-          className="mb-12 lg:mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <p className="text-xl md:text-2xl lg:text-3xl font-serif text-primary-100/90 leading-relaxed max-w-4xl">
-            {t.about.mainText}
-          </p>
-        </motion.div>
-
-        {/* Details - Two columns on desktop */}
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-          {t.about.paragraphs.map((paragraph, index) => (
-            <motion.p
+        {/* Content sections with titles */}
+        <div className="space-y-16">
+          {t.about.sections.map((section, index) => (
+            <motion.div
               key={index}
-              className="text-primary-300 leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
+              className="max-w-4xl"
+              initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: 0.3 + index * 0.1 }}
+              transition={{ duration: 0.8, delay: 0.2 + index * 0.15 }}
             >
-              {paragraph}
-            </motion.p>
+              {/* Section subtitle */}
+              <h3 className="text-gold-400 text-sm md:text-base font-medium tracking-wide uppercase mb-4">
+                {section.title}
+              </h3>
+              {/* Section content */}
+              <p className="text-primary-300 leading-relaxed text-base md:text-lg">
+                {section.content}
+              </p>
+            </motion.div>
           ))}
         </div>
 
-        {/* Key values */}
+        {/* Values section */}
         <motion.div
-          className="mt-20 pt-20 border-t border-gold-500/10"
+          className="mt-24 pt-16 border-t border-gold-500/20"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.6 }}
         >
-          <div className="grid md:grid-cols-3 gap-12">
+          {/* Values title */}
+          <motion.h3
+            className="text-gold-400 text-sm md:text-base font-medium tracking-wide uppercase mb-12 text-center"
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.6, delay: 0.7 }}
+          >
+            {t.about.valuesTitle}
+          </motion.h3>
+
+          {/* Values grid - Professional layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4">
             {t.about.values.map((value, index) => (
               <motion.div
                 key={value.number}
-                className="group"
+                className="group relative p-6 bg-navy-900/30 border border-gold-500/10 rounded-sm hover:border-gold-500/30 transition-all duration-300"
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.6, delay: 0.7 + index * 0.1 }}
+                transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
               >
-                <span className="text-gold-400 text-xs tracking-widest mb-3 block font-medium">
+                {/* Number badge */}
+                <span className="absolute -top-3 left-6 bg-navy-950 px-2 text-gold-400 text-xs tracking-widest font-medium">
                   {value.number}
                 </span>
-                <h4 className="text-base font-medium text-primary-100 mb-2 group-hover:text-gold-400 transition-colors duration-300">
+                
+                {/* Value title */}
+                <h4 className="text-lg font-medium text-primary-100 mb-3 group-hover:text-gold-400 transition-colors duration-300">
                   {value.title}
                 </h4>
+                
+                {/* Value description */}
                 <p className="text-primary-400 text-sm leading-relaxed">
                   {value.description}
                 </p>
