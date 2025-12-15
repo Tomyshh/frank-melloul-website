@@ -27,9 +27,8 @@ export default function Footer() {
             />
           </motion.div>
 
-          {/* Contact & Social */}
+          {/* Email */}
           <motion.div
-            className="flex items-center gap-6"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -41,7 +40,16 @@ export default function Footer() {
             >
               contact@melloulpartners.com
             </Link>
+          </motion.div>
 
+          {/* Social Icons */}
+          <motion.div
+            className="flex items-center gap-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            viewport={{ once: true }}
+          >
             {/* LinkedIn */}
             <Link
               href="https://www.linkedin.com/in/frank-melloul-158470/?originalSubdomain=fr"
