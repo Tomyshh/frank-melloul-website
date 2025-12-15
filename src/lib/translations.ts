@@ -130,7 +130,7 @@ export const translations = {
     },
     // Footer
     footer: {
-      copyright: "© 2025 Melloul & Partners - Global Advisory",
+      copyright: "© 2025 MELLOUL & Partners. Global Advisory.",
     },
   },
   fr: {
@@ -262,7 +262,7 @@ export const translations = {
     },
     // Footer
     footer: {
-      copyright: "© 2025 Melloul & Partners - Global Advisory",
+      copyright: "© 2025 MELLOUL & Partners. Global Advisory.",
     },
   },
 } as const;

@@ -101,9 +101,29 @@ export default function ContactSection() {
             </div>
             <div className="text-center">
               <span className="text-gold-400 text-xs tracking-widest uppercase block mb-2">
-                {t.contact.location}
+                Facebook
               </span>
-              <span className="text-primary-300 text-sm">{t.contact.locationValue}</span>
+              <Link
+                href="https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-300 hover:text-gold-500 text-sm transition-colors duration-300 animated-underline"
+              >
+                facebook.com
+              </Link>
+            </div>
+            <div className="text-center">
+              <span className="text-gold-400 text-xs tracking-widest uppercase block mb-2">
+                Instagram
+              </span>
+              <Link
+                href="https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-300 hover:text-gold-500 text-sm transition-colors duration-300 animated-underline"
+              >
+                instagram.com
+              </Link>
             </div>
           </motion.div>
         </div>

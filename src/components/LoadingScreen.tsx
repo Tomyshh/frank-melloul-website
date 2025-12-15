@@ -58,15 +58,6 @@ export default function LoadingScreen() {
                 height={250}
                 style={{ objectFit: "contain" }}
               />
-              {/* Company name */}
-              <motion.h1
-                className="text-gold-400 font-sans text-2xl md:text-3xl tracking-[0.15em] font-medium"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-              >
-                MELLOUL & Partners
-              </motion.h1>
             </motion.div>
 
             {/* Loading bar */}

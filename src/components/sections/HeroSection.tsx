@@ -75,9 +75,12 @@ function HeroSection() {
           >
             <div className="flex items-center gap-3">
               <span className="text-gold-400 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.15em] font-medium">
-                MELLOUL & Partners
+                {t.hero.companyName}
               </span>
             </div>
+            <span className="text-primary-300 text-xs md:text-sm tracking-[0.35em] uppercase">
+              Global Advisory
+            </span>
           </motion.div>
 
           {/* Tagline - Strategy for Influence and Diplomacy */}
