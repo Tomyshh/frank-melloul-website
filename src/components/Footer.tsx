@@ -35,10 +35,10 @@ export default function Footer() {
             viewport={{ once: true }}
           >
             <Link
-              href="mailto:contact@melloulpartners.com"
+              href="mailto:contact@melloulandpartners.com"
               className="text-primary-300 hover:text-gold-500 text-sm transition-colors duration-300 animated-underline"
             >
-              contact@melloulpartners.com
+              contact@melloulandpartners.com
             </Link>
           </motion.div>
 

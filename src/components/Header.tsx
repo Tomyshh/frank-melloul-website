@@ -118,7 +118,7 @@ export default function Header() {
                 transition={{ duration: 0.4, delay: hasAnimated ? 0 : 1.4 }}
               >
                 <Link
-                  href="mailto:contact@melloulpartners.com"
+                  href="mailto:contact@melloulandpartners.com"
                   className="group flex items-center gap-2 text-primary-200 hover:text-gold-500 text-sm tracking-widest uppercase font-medium transition-colors duration-300"
                 >
                   <span className="w-8 h-[1px] bg-gold-500 group-hover:w-12 transition-all duration-300" />
@@ -202,7 +202,7 @@ export default function Header() {
                 transition={{ duration: 0.4, delay: 0.3 }}
               >
                 <Link
-                  href="mailto:contact@melloulpartners.com"
+                  href="mailto:contact@melloulandpartners.com"
                   className="mt-8 btn-primary"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

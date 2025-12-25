@@ -68,7 +68,7 @@ export default function ContactSection() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <Link href="mailto:contact@melloulpartners.com">
+            <Link href="mailto:contact@melloulandpartners.com">
               <motion.button
                 className="btn-primary text-lg px-12 py-5"
                 whileHover={{ scale: 1.02 }}
@@ -97,7 +97,7 @@ export default function ContactSection() {
               <span className="text-gold-400 text-xs tracking-widest uppercase block mb-2">
                 {t.contact.email}
               </span>
-              <span className="text-primary-300 text-sm">contact@melloulpartners.com</span>
+              <span className="text-primary-300 text-sm">contact@melloulandpartners.com</span>
             </div>
           </motion.div>
         </div>
