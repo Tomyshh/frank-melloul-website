@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-
-  // Reduce runtime footprint on small instances (e.g. Render 512MB)
-  output: "standalone",
   
   // Optimize images
   images: {
