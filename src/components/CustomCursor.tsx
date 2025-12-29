@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useRef, useState, useCallback, memo } from "react";
 import { motion, useSpring, useMotionValue } from "framer-motion";
 
 function CustomCursor() {
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(true);
+  const isVisibleRef = useRef(false);
 
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -28,11 +29,20 @@ function CustomCursor() {
     const moveCursor = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
-      if (!isVisible) setIsVisible(true);
+      if (!isVisibleRef.current) {
+        isVisibleRef.current = true;
+        setIsVisible(true);
+      }
     };
 
-    const handleMouseLeave = () => setIsVisible(false);
-    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseLeave = () => {
+      isVisibleRef.current = false;
+      setIsVisible(false);
+    };
+    const handleMouseEnter = () => {
+      isVisibleRef.current = true;
+      setIsVisible(true);
+    };
 
     window.addEventListener("mousemove", moveCursor, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
@@ -67,7 +77,7 @@ function CustomCursor() {
       document.removeEventListener("mouseover", handleDocumentMouseOver);
       document.removeEventListener("mouseout", handleDocumentMouseOut);
     };
-  }, [cursorX, cursorY, isVisible, handleHoverStart, handleHoverEnd]);
+  }, [cursorX, cursorY, handleHoverStart, handleHoverEnd]);
 
   // Don't render on touch devices
   if (isTouchDevice) {

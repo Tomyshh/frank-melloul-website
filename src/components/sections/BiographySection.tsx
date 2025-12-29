@@ -2,7 +2,6 @@
 
 import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
-import Image from "next/image";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function BiographySection() {
@@ -55,13 +54,11 @@ export default function BiographySection() {
               transition={{ duration: 1, delay: 0.2 }}
             >
               {/* Frank Melloul Photo */}
-              <Image
+              <img
                 src="/frank_melloul_avatar.jpeg"
                 alt="Frank Melloul - Founder of Melloul & Partners"
-                fill
-                className="object-cover object-center"
-                sizes="(max-width: 768px) 100vw, 40vw"
-                priority
+                className="absolute inset-0 h-full w-full object-cover object-center"
+                loading="eager"
               />
 
               {/* Subtle overlay for depth */}

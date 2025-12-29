@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // Reduce runtime footprint on small instances (e.g. Render 512MB)
+  output: "standalone",
   
   // Optimize images
   images: {
@@ -13,6 +16,11 @@ const nextConfig = {
   // Compiler optimizations
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  experimental: {
+    // Helps reduce client bundle size for heavy libs
+    optimizePackageImports: ["framer-motion", "@studio-freight/lenis"],
   },
 };
 
