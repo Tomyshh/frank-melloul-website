@@ -17,7 +17,11 @@ const LoadingScreen = dynamic(
 );
 
 export const metadata: Metadata = {
-  title: "Melloul & Partners | Global Advisory - Strategies for Influence and Diplomacy",
+  title: {
+    default:
+      "Melloul & Partners | Global Advisory - Strategies for Influence and Diplomacy",
+    template: "%s | Melloul & Partners",
+  },
   description:
     "Global strategic advisory firm. We empower leaders to shape agendas, unlock opportunities, and create lasting impact.",
   keywords: [
@@ -31,6 +35,18 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Frank Melloul" }],
   metadataBase: new URL("https://frank-melloul-website.onrender.com"),
+  alternates: { canonical: "/" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/only_gold_logo.png", sizes: "32x32", type: "image/png" },
@@ -47,6 +63,8 @@ export const metadata: Metadata = {
       "Global strategic advisory firm. Strategies for Influence and Diplomacy.",
     type: "website",
     locale: "en_US",
+    url: "/",
+    siteName: "Melloul & Partners",
     images: [
       {
         url: "/only_gold_logo.png",
@@ -69,6 +87,38 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        name: "Melloul & Partners",
+        url: "https://frank-melloul-website.onrender.com/",
+        logo: "https://frank-melloul-website.onrender.com/only_gold_logo.png",
+        email: "contact@melloulandpartners.com",
+        address: "Paris, Dubai",
+        sameAs: [
+          "https://www.linkedin.com/in/frank-melloul-158470/?originalSubdomain=fr",
+          "https://x.com/frankmelloul",
+          "https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx",
+          "https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr",
+        ],
+      },
+      {
+        "@type": "Person",
+        name: "Frank Melloul",
+        url: "https://frank-melloul-website.onrender.com/",
+        worksFor: { "@type": "Organization", name: "Melloul & Partners" },
+        sameAs: [
+          "https://www.linkedin.com/in/frank-melloul-158470/?originalSubdomain=fr",
+          "https://x.com/frankmelloul",
+          "https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx",
+          "https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr",
+        ],
+      },
+    ],
+  };
+
   return (
     <html lang="en">
       <head>
@@ -90,10 +140,18 @@ export default function RootLayout({
             `,
           }}
         />
+
+        {/* JSON-LD (SEO) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData),
+          }}
+        />
       </head>
       <body className="antialiased">
         <PreloadResources />
-        <LanguageProvider>
+        <LanguageProvider initialLocale="en">
           <LoadingScreen />
           <SmoothScrollProvider>
             {children}

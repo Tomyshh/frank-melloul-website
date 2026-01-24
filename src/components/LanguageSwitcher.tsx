@@ -1,16 +1,32 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { Locale } from "@/lib/translations";
 
 export default function LanguageSwitcher() {
   const { locale, setLocale } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const languages: { code: Locale; label: string }[] = [
     { code: "en", label: "EN" },
     { code: "fr", label: "FR" },
   ];
+
+  const navigateToLocale = (targetLocale: Locale) => {
+    const isFrenchPath = pathname === "/fr" || pathname.startsWith("/fr/");
+    const currentPathWithoutFr = isFrenchPath ? pathname.replace(/^\/fr/, "") || "/" : pathname;
+
+    const nextPath =
+      targetLocale === "fr"
+        ? currentPathWithoutFr === "/" ? "/fr" : `/fr${currentPathWithoutFr}`
+        : currentPathWithoutFr;
+
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    router.push(`${nextPath}${hash}`);
+  };
 
   return (
     <div className="flex items-center gap-1 bg-navy-900/50 rounded-full p-1">
@@ -19,7 +35,10 @@ export default function LanguageSwitcher() {
         return (
           <button
             key={lang.code}
-            onClick={() => setLocale(lang.code)}
+            onClick={() => {
+              setLocale(lang.code);
+              navigateToLocale(lang.code);
+            }}
             className={`relative px-3 py-1.5 text-xs font-medium tracking-wider rounded-full transition-all duration-300 ${
               isActive
                 ? "text-navy-950 bg-gold-400"

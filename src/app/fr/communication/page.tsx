@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import CommunicationPageClient from "./CommunicationPageClient";
+import CommunicationPageClient from "@/app/communication/CommunicationPageClient";
 
 export const metadata: Metadata = {
   title: "Communication | Melloul & Partners",
   description:
-    "Media appearances, interviews, and insights from Melloul & Partners.",
+    "Apparitions médiatiques, interviews et perspectives de Melloul & Partners.",
   alternates: {
-    canonical: "/communication",
+    canonical: "/fr/communication",
     languages: {
       en: "/communication",
       fr: "/fr/communication",
@@ -15,12 +15,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Communication | Melloul & Partners",
     description:
-      "Media appearances, interviews, and insights from Melloul & Partners.",
-    url: "/communication",
+      "Apparitions médiatiques, interviews et perspectives de Melloul & Partners.",
+    url: "/fr/communication",
+    locale: "fr_FR",
     type: "website",
   },
 };
 
-export default function CommunicationPage() {
+export default function CommunicationFrPage() {
   return <CommunicationPageClient />;
 }
+

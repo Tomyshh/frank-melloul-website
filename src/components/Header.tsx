@@ -13,7 +13,9 @@ export default function Header() {
   const [hasAnimated, setHasAnimated] = useState(false);
   const { t } = useLanguage();
   const pathname = usePathname();
-  const isHomePage = pathname === "/";
+  const isFrenchPath = pathname === "/fr" || pathname.startsWith("/fr/");
+  const basePrefix = isFrenchPath ? "/fr" : "";
+  const isHomePage = pathname === (basePrefix || "/");
 
   // Mark animations as complete after first render
   useEffect(() => {
@@ -46,10 +48,16 @@ export default function Header() {
 
   // Build navigation items with proper links based on current page
   const navItems = [
-    { name: t.nav.services, href: isHomePage ? "#services" : "/#services" },
-    { name: t.nav.about, href: isHomePage ? "#about" : "/#about" },
-    { name: t.nav.biography, href: isHomePage ? "#biography" : "/#biography" },
-    { name: t.nav.communication, href: "/communication" },
+    {
+      name: t.nav.services,
+      href: isHomePage ? "#services" : `${basePrefix}/#services`,
+    },
+    { name: t.nav.about, href: isHomePage ? "#about" : `${basePrefix}/#about` },
+    {
+      name: t.nav.biography,
+      href: isHomePage ? "#biography" : `${basePrefix}/#biography`,
+    },
+    { name: t.nav.communication, href: `${basePrefix}/communication` },
   ];
 
   return (
@@ -67,7 +75,7 @@ export default function Header() {
         <div className="container mx-auto px-6 md:px-12 lg:px-20">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="relative z-10">
+            <Link href={basePrefix || "/"} className="relative z-10">
               <motion.div
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.3 }}
