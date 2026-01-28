@@ -176,6 +176,7 @@ function VideosDashboard() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<VideoRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [previewing, setPreviewing] = useState<VideoRow | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -289,6 +290,16 @@ function VideosDashboard() {
         />
       )}
 
+      {previewing ? (
+        <AdminVideoModal
+          title={previewing.title}
+          description={previewing.description ?? ""}
+          videoUrl={getPublicUrl(previewing.video_path)}
+          posterUrl={getPublicUrl(previewing.thumbnail_path)}
+          onClose={() => setPreviewing(null)}
+        />
+      ) : null}
+
       <div className="rounded-2xl border border-gold-500/10 bg-navy-950/60 backdrop-blur">
         <div className="p-5 border-b border-gold-500/10 flex items-center justify-between">
           <h2 className="text-primary-100 font-medium">Vidéos</h2>
@@ -312,14 +323,31 @@ function VideosDashboard() {
             {videos.map((v) => (
               <li key={v.id} className="p-5 flex flex-col md:flex-row gap-4">
                 <div className="w-full md:w-56">
-                  <div className="aspect-video rounded-lg overflow-hidden bg-navy-900/50 border border-gold-500/10">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewing(v)}
+                    className="w-full aspect-video rounded-lg overflow-hidden bg-navy-900/50 border border-gold-500/10 relative group"
+                    aria-label={`Voir: ${v.title}`}
+                  >
                     <img
                       src={getPublicUrl(v.thumbnail_path)}
                       alt={v.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
                     />
-                  </div>
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="w-12 h-12 rounded-full bg-gold-500 flex items-center justify-center">
+                        <svg
+                          className="w-5 h-5 text-navy-950 ml-0.5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </button>
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -353,6 +381,13 @@ function VideosDashboard() {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
+                        onClick={() => setPreviewing(v)}
+                        className="rounded-lg border border-gold-500/15 bg-navy-950/30 text-primary-200 px-3 py-2 text-sm hover:border-gold-500/30 hover:text-gold-200 transition-colors"
+                      >
+                        Voir
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => setEditing(v)}
                         className="rounded-lg border border-gold-500/15 bg-navy-950/30 text-primary-200 px-3 py-2 text-sm hover:border-gold-500/30 hover:text-gold-200 transition-colors"
                       >
@@ -381,6 +416,80 @@ function VideosDashboard() {
         )}
       </div>
     </section>
+  );
+}
+
+function AdminVideoModal({
+  title,
+  description,
+  videoUrl,
+  posterUrl,
+  onClose,
+}: {
+  title: string;
+  description: string;
+  videoUrl: string;
+  posterUrl: string;
+  onClose: () => void;
+}) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-5xl rounded-2xl overflow-hidden border border-gold-500/10 bg-navy-950/95">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-gold-500/10">
+          <div className="min-w-0">
+            <div className="text-primary-100 font-medium truncate">{title}</div>
+            {description ? (
+              <div className="text-primary-400 text-sm truncate">{description}</div>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-primary-400 hover:text-gold-300 transition-colors"
+          >
+            Fermer
+          </button>
+        </div>
+
+        <div className="bg-black relative aspect-video">
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="inline-flex w-10 h-10 rounded-full border-2 border-gold-400/30 border-t-gold-400 animate-spin" />
+            </div>
+          ) : null}
+          <video
+            src={videoUrl}
+            controls
+            playsInline
+            className="w-full h-full object-contain"
+            poster={posterUrl}
+            preload="metadata"
+            onLoadStart={() => setIsLoading(true)}
+            onWaiting={() => setIsLoading(true)}
+            onCanPlay={() => setIsLoading(false)}
+            onCanPlayThrough={() => setIsLoading(false)}
+            onLoadedData={() => setIsLoading(false)}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
