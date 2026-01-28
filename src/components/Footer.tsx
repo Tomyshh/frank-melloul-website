@@ -3,9 +3,36 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
+import { useRouter } from "next/navigation";
+import { useRef } from "react";
 
 export default function Footer() {
   const { t } = useLanguage();
+  const router = useRouter();
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef<number | null>(null);
+
+  const handleSecretAdminClick = () => {
+    clickCountRef.current += 1;
+
+    if (clickTimerRef.current) {
+      window.clearTimeout(clickTimerRef.current);
+    }
+
+    clickTimerRef.current = window.setTimeout(() => {
+      clickCountRef.current = 0;
+      clickTimerRef.current = null;
+    }, 1200);
+
+    if (clickCountRef.current >= 3) {
+      clickCountRef.current = 0;
+      if (clickTimerRef.current) {
+        window.clearTimeout(clickTimerRef.current);
+        clickTimerRef.current = null;
+      }
+      router.push("/admin");
+    }
+  };
 
   return (
     <footer className="bg-navy-950 border-t border-gold-500/10">
@@ -153,6 +180,32 @@ export default function Footer() {
           >
             {t.footer.copyright}
           </motion.p>
+
+          {/* Secret settings (triple-clic) */}
+          <motion.button
+            type="button"
+            aria-label="Settings"
+            onClick={handleSecretAdminClick}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            viewport={{ once: true }}
+            className="mt-2 inline-flex items-center justify-center w-9 h-9 rounded-full border border-gold-500/15 text-primary-500 hover:text-gold-400 hover:border-gold-500/40 hover:bg-gold-500/5 transition-all duration-300"
+          >
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Z" />
+              <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.03.03a2.17 2.17 0 0 1-1.53 3.7 2.17 2.17 0 0 1-1.53-.64l-.03-.03a1.8 1.8 0 0 0-1.98-.36 1.8 1.8 0 0 0-1.1 1.65V21a2.17 2.17 0 1 1-4.34 0v-.05a1.8 1.8 0 0 0-1.1-1.65 1.8 1.8 0 0 0-1.98.36l-.03.03a2.17 2.17 0 0 1-3.06 0 2.17 2.17 0 0 1 0-3.06l.03-.03A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-1.65-1.1H3a2.17 2.17 0 1 1 0-4.34h-.05A1.8 1.8 0 0 0 4.6 8.4a1.8 1.8 0 0 0-.36-1.98l-.03-.03a2.17 2.17 0 0 1 3.06-3.06l.03.03A1.8 1.8 0 0 0 9.3 3.6a1.8 1.8 0 0 0 1.1-1.65V2a2.17 2.17 0 1 1 4.34 0v.05a1.8 1.8 0 0 0 1.1 1.65 1.8 1.8 0 0 0 1.98-.36l.03-.03a2.17 2.17 0 0 1 3.06 3.06l-.03.03A1.8 1.8 0 0 0 19.4 8.4a1.8 1.8 0 0 0 1.65 1.1H21a2.17 2.17 0 1 1 0 4.34h-.05a1.8 1.8 0 0 0-1.65 1.1Z" />
+            </svg>
+          </motion.button>
         </div>
       </div>
     </footer>

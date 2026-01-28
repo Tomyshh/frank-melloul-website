@@ -5,46 +5,9 @@ import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
-// Mock data for videos - will be replaced with database later
-const mockVideos = [
-  {
-    id: 1,
-    thumbnail:
-      "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=450&fit=crop",
-    title: "Strategic Advisory in the Modern Era",
-    description:
-      "Frank Melloul discusses the evolving landscape of global strategic advisory and its impact on international relations.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-  },
-  {
-    id: 2,
-    thumbnail:
-      "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=450&fit=crop",
-    title: "Building Bridges: Diplomacy in Action",
-    description:
-      "An in-depth look at how effective diplomacy can unlock new market opportunities.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-  },
-  {
-    id: 3,
-    thumbnail:
-      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=800&h=450&fit=crop",
-    title: "Leadership and Influence",
-    description:
-      "Insights on empowering leaders to shape agendas and create lasting impact.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-  },
-  {
-    id: 4,
-    thumbnail:
-      "https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&h=450&fit=crop",
-    title: "Market Access Strategies",
-    description:
-      "Exploring effective approaches for entering complex international markets.",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-  },
-];
+import { useEffect, useMemo, useState } from "react";
+import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 
 // Translations for this page
 const pageTranslations = {
@@ -54,6 +17,8 @@ const pageTranslations = {
       "Media appearances, interviews, and insights from Melloul & Partners",
     backToHome: "Back to Home",
     watchVideo: "Watch Video",
+    loading: "Loading…",
+    empty: "No videos available yet.",
   },
   fr: {
     title: "Communication",
@@ -61,12 +26,61 @@ const pageTranslations = {
       "Apparitions médiatiques, interviews et perspectives de Melloul & Partners",
     backToHome: "Retour à l'accueil",
     watchVideo: "Regarder la vidéo",
+    loading: "Chargement…",
+    empty: "Aucune vidéo disponible pour le moment.",
   },
 } as const;
 
 export default function CommunicationPageClient() {
   const { locale } = useLanguage();
   const t = pageTranslations[locale];
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [active, setActive] = useState<Video | null>(null);
+
+  const bucket = SUPABASE_MEDIA_BUCKET;
+  const getPublicUrl = useMemo(
+    () => (path: string) => supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl,
+    [bucket]
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("videos")
+        .select("id,title,description,video_path,thumbnail_path,is_published,sort_order,created_at")
+        .eq("is_published", true)
+        .order("sort_order", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (!mounted) return;
+      setLoading(false);
+
+      if (error) {
+        toast.error(`Impossible de charger les vidéos: ${error.message}`);
+        setVideos([]);
+        return;
+      }
+
+      const mapped =
+        (data ?? []).map((row: any) => ({
+          id: row.id as string,
+          thumbnail: getPublicUrl(row.thumbnail_path as string),
+          title: row.title as string,
+          description: (row.description as string | null) ?? "",
+          videoUrl: getPublicUrl(row.video_path as string),
+        })) ?? [];
+
+      setVideos(mapped);
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [getPublicUrl]);
 
   return (
     <>
@@ -112,24 +126,38 @@ export default function CommunicationPageClient() {
 
           {/* Video grid */}
           <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-            {mockVideos.map((video, index) => (
-              <VideoCard
-                key={video.id}
-                video={video}
-                index={index}
-                watchText={t.watchVideo}
-              />
-            ))}
+            {loading ? (
+              <div className="text-primary-300 text-sm">{t.loading}</div>
+            ) : videos.length === 0 ? (
+              <div className="text-primary-300 text-sm">{t.empty}</div>
+            ) : (
+              videos.map((video, index) => (
+                <VideoCard
+                  key={video.id}
+                  video={video}
+                  index={index}
+                  watchText={t.watchVideo}
+                  onOpen={() => setActive(video)}
+                />
+              ))
+            )}
           </div>
         </div>
       </main>
+
+      {active ? (
+        <VideoModal
+          video={active}
+          onClose={() => setActive(null)}
+        />
+      ) : null}
       <Footer />
     </>
   );
 }
 
 interface Video {
-  id: number;
+  id: string;
   thumbnail: string;
   title: string;
   description: string;
@@ -140,10 +168,12 @@ function VideoCard({
   video,
   index,
   watchText,
+  onOpen,
 }: {
   video: Video;
   index: number;
   watchText: string;
+  onOpen: () => void;
 }) {
   return (
     <motion.article
@@ -153,7 +183,11 @@ function VideoCard({
       transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video mb-6 overflow-hidden rounded-lg bg-navy-800">
+      <button
+        type="button"
+        onClick={onOpen}
+        className="relative aspect-video mb-6 overflow-hidden rounded-lg bg-navy-800 w-full text-left"
+      >
         <img
           src={video.thumbnail}
           alt={video.title}
@@ -177,7 +211,7 @@ function VideoCard({
         </div>
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950/60 to-transparent pointer-events-none" />
-      </div>
+      </button>
 
       {/* Content */}
       <div className="space-y-3">
@@ -188,12 +222,76 @@ function VideoCard({
         <motion.button
           className="inline-flex items-center gap-2 text-gold-500 text-sm font-medium tracking-wider uppercase mt-2"
           whileHover={{ x: 5 }}
+          onClick={onOpen}
         >
           {watchText}
           <span>→</span>
         </motion.button>
       </div>
     </motion.article>
+  );
+}
+
+function VideoModal({ video, onClose }: { video: Video; onClose: () => void }) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+      role="dialog"
+      aria-modal="true"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-5xl rounded-2xl overflow-hidden border border-gold-500/10 bg-navy-950/95">
+        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-gold-500/10">
+          <div className="min-w-0">
+            <div className="text-primary-100 font-medium truncate">{video.title}</div>
+            {video.description ? (
+              <div className="text-primary-400 text-sm truncate">{video.description}</div>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-primary-400 hover:text-gold-300 transition-colors"
+          >
+            Fermer
+          </button>
+        </div>
+
+        {/* Cadre fixe 16:9 pour éviter que le poster change de taille au chargement */}
+        <div className="bg-black relative aspect-video">
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="inline-flex w-10 h-10 rounded-full border-2 border-gold-400/30 border-t-gold-400 animate-spin" />
+            </div>
+          ) : null}
+          <video
+            src={video.videoUrl}
+            controls
+            playsInline
+            className="w-full h-full object-contain"
+            poster={video.thumbnail}
+            preload="metadata"
+            onLoadStart={() => setIsLoading(true)}
+            onWaiting={() => setIsLoading(true)}
+            onCanPlay={() => setIsLoading(false)}
+            onCanPlayThrough={() => setIsLoading(false)}
+            onLoadedData={() => setIsLoading(false)}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 

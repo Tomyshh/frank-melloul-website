@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
 import PreloadResources from "@/components/PreloadResources";
+import { Toaster } from "sonner";
 
 // Dynamic imports for client-side only components (reduces initial bundle)
 const SmoothScrollProvider = dynamic(
@@ -157,6 +158,13 @@ export default function RootLayout({
             {children}
           </SmoothScrollProvider>
         </LanguageProvider>
+
+        <Toaster
+          richColors
+          closeButton
+          position="bottom-right"
+          theme="dark"
+        />
         
         {/* Noise overlay for texture */}
         <div className="noise-overlay" />
