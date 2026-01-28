@@ -24,21 +24,33 @@ function sanitizeFilename(name: string) {
     .replace(/[^a-zA-Z0-9._-]/g, "");
 }
 
-function getPublicUrl(path: string) {
-  const { data } = supabase.storage.from(SUPABASE_MEDIA_BUCKET).getPublicUrl(path);
+function getPublicUrl(client: NonNullable<typeof supabase>, path: string) {
+  const { data } = client.storage.from(SUPABASE_MEDIA_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
 
 export default function AdminPage() {
+  const client = supabase;
+  const supabaseReady = Boolean(client);
   const [session, setSession] = useState<Awaited<
-    ReturnType<typeof supabase.auth.getSession>
+    ReturnType<NonNullable<typeof supabase>["auth"]["getSession"]>
   >["data"]["session"]>(null);
   const [loadingSession, setLoadingSession] = useState(true);
 
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth
+    if (!supabaseReady) {
+      toast.error(
+        "Supabase n'est pas configuré. Vérifie les variables d'environnement sur Render."
+      );
+      setLoadingSession(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    client!.auth
       .getSession()
       .then(({ data, error }) => {
         if (!mounted) return;
@@ -50,7 +62,7 @@ export default function AdminPage() {
         setLoadingSession(false);
       });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = client!.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
     });
 
@@ -58,13 +70,31 @@ export default function AdminPage() {
       mounted = false;
       sub.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabaseReady]);
 
   if (loadingSession) {
     return (
       <main className="min-h-screen bg-navy-950 pt-28 pb-20">
         <div className="container mx-auto px-6 md:px-12 lg:px-20">
           <div className="text-primary-300 text-sm">Chargement…</div>
+        </div>
+      </main>
+    );
+  }
+
+  if (!supabaseReady) {
+    return (
+      <main className="min-h-screen bg-navy-950 pt-28 pb-20">
+        <div className="fixed inset-0 bg-gradient-to-b from-navy-950 via-navy-900 to-navy-950 pointer-events-none" />
+        <div className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-6 text-red-100">
+            <div className="font-medium mb-1">Configuration manquante</div>
+            <div className="text-sm text-red-100/80">
+              Les variables <code className="font-mono">NEXT_PUBLIC_SUPABASE_URL</code>{" "}
+              et <code className="font-mono">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY</code>{" "}
+              doivent être définies dans Render (au build et au runtime).
+            </div>
+          </div>
         </div>
       </main>
     );
@@ -112,7 +142,7 @@ function LoginPanel() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase!.auth.signInWithPassword({ email, password });
     setSubmitting(false);
 
     if (error) {
@@ -172,6 +202,7 @@ function LoginPanel() {
 }
 
 function VideosDashboard() {
+  const client = supabase!;
   const [videos, setVideos] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<VideoRow | null>(null);
@@ -180,7 +211,7 @@ function VideosDashboard() {
 
   const refresh = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("videos")
       .select("*")
       .order("sort_order", { ascending: false })
@@ -199,7 +230,7 @@ function VideosDashboard() {
   }, []);
 
   const onLogout = async () => {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await client.auth.signOut();
     if (error) {
       toast.error(`Déconnexion impossible: ${error.message}`);
       return;
@@ -208,7 +239,7 @@ function VideosDashboard() {
   };
 
   const onTogglePublished = async (row: VideoRow) => {
-    const { error } = await supabase
+    const { error } = await client
       .from("videos")
       .update({ is_published: !row.is_published })
       .eq("id", row.id);
@@ -226,7 +257,7 @@ function VideosDashboard() {
     );
     if (!ok) return;
 
-    const { error: dbError } = await supabase.from("videos").delete().eq("id", row.id);
+    const { error: dbError } = await client.from("videos").delete().eq("id", row.id);
     if (dbError) {
       toast.error(`Suppression DB impossible: ${dbError.message}`);
       return;
@@ -234,7 +265,7 @@ function VideosDashboard() {
 
     const paths = [row.video_path, row.thumbnail_path].filter(Boolean);
     if (paths.length) {
-      const { error: storageError } = await supabase
+      const { error: storageError } = await client
         .storage
         .from(SUPABASE_MEDIA_BUCKET)
         .remove(paths);
@@ -294,8 +325,8 @@ function VideosDashboard() {
         <AdminVideoModal
           title={previewing.title}
           description={previewing.description ?? ""}
-          videoUrl={getPublicUrl(previewing.video_path)}
-          posterUrl={getPublicUrl(previewing.thumbnail_path)}
+          videoUrl={getPublicUrl(client, previewing.video_path)}
+          posterUrl={getPublicUrl(client, previewing.thumbnail_path)}
           onClose={() => setPreviewing(null)}
         />
       ) : null}
@@ -330,7 +361,7 @@ function VideosDashboard() {
                     aria-label={`Voir: ${v.title}`}
                   >
                     <img
-                      src={getPublicUrl(v.thumbnail_path)}
+                      src={getPublicUrl(client, v.thumbnail_path)}
                       alt={v.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
@@ -504,6 +535,7 @@ function VideoForm({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const client = supabase!;
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [isPublished, setIsPublished] = useState(initial?.is_published ?? true);
@@ -537,7 +569,7 @@ function VideoForm({
     const uploadFile = async (folder: "videos" | "thumbnails", file: File) => {
       const ext = sanitizeFilename(file.name);
       const path = `${folder}/${id}/${nowPrefix}-${ext}`;
-      const { error } = await supabase.storage.from(SUPABASE_MEDIA_BUCKET).upload(path, file, {
+      const { error } = await client.storage.from(SUPABASE_MEDIA_BUCKET).upload(path, file, {
         // Les chemins sont versionnés (timestamp) -> cache long OK
         cacheControl: "31536000",
         upsert: false,
@@ -552,7 +584,7 @@ function VideoForm({
         setSavingStep("thumbnail");
         const uploadedThumbPath = await uploadFile("thumbnails", thumbFile);
         if (initial?.thumbnail_path) {
-          await supabase.storage
+          await client.storage
             .from(SUPABASE_MEDIA_BUCKET)
             .remove([initial.thumbnail_path]);
         }
@@ -563,14 +595,14 @@ function VideoForm({
         setSavingStep("video");
         const uploadedVideoPath = await uploadFile("videos", videoFile);
         if (initial?.video_path) {
-          await supabase.storage.from(SUPABASE_MEDIA_BUCKET).remove([initial.video_path]);
+          await client.storage.from(SUPABASE_MEDIA_BUCKET).remove([initial.video_path]);
         }
         nextVideoPath = uploadedVideoPath;
       }
 
       if (isCreate) {
         setSavingStep("db");
-        const { error } = await supabase.from("videos").insert({
+        const { error } = await client.from("videos").insert({
           id,
           title,
           description: description || null,
@@ -583,7 +615,7 @@ function VideoForm({
         toast.success("Vidéo ajoutée.");
       } else {
         setSavingStep("db");
-        const { error } = await supabase
+        const { error } = await client
           .from("videos")
           .update({
             title,

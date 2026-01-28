@@ -37,19 +37,30 @@ export default function CommunicationPageClient() {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<Video | null>(null);
+  const client = supabase;
+  const supabaseReady = Boolean(client);
 
   const bucket = SUPABASE_MEDIA_BUCKET;
   const getPublicUrl = useMemo(
-    () => (path: string) => supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl,
-    [bucket]
+    () => (path: string) =>
+      client?.storage.from(bucket).getPublicUrl(path).data.publicUrl ?? "",
+    [bucket, client]
   );
 
   useEffect(() => {
     let mounted = true;
 
     (async () => {
+      if (!supabaseReady) {
+        setLoading(false);
+        toast.error(
+          "Supabase n'est pas configuré. Vérifie les variables d'environnement du déploiement."
+        );
+        return;
+      }
+
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await client!
         .from("videos")
         .select("id,title,description,video_path,thumbnail_path,is_published,sort_order,created_at")
         .eq("is_published", true)
@@ -80,7 +91,7 @@ export default function CommunicationPageClient() {
     return () => {
       mounted = false;
     };
-  }, [getPublicUrl]);
+  }, [getPublicUrl, supabaseReady]);
 
   return (
     <>
