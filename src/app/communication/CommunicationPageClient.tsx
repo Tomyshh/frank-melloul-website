@@ -17,8 +17,10 @@ const pageTranslations = {
       "Media appearances, interviews, and insights from Melloul & Partners",
     backToHome: "Back to Home",
     watchVideo: "Watch Video",
+    articlesTitle: "Posts",
     loading: "Loading…",
     empty: "No videos available yet.",
+    emptyArticles: "No posts available yet.",
   },
   fr: {
     title: "Communication",
@@ -26,8 +28,10 @@ const pageTranslations = {
       "Apparitions médiatiques, interviews et perspectives de Melloul & Partners",
     backToHome: "Retour à l'accueil",
     watchVideo: "Regarder la vidéo",
+    articlesTitle: "Articles",
     loading: "Chargement…",
     empty: "Aucune vidéo disponible pour le moment.",
+    emptyArticles: "Aucun article disponible pour le moment.",
   },
 } as const;
 
@@ -35,6 +39,7 @@ export default function CommunicationPageClient() {
   const { locale } = useLanguage();
   const t = pageTranslations[locale];
   const [videos, setVideos] = useState<Video[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<Video | null>(null);
   const client = supabase;
@@ -60,37 +65,69 @@ export default function CommunicationPageClient() {
       }
 
       setLoading(true);
-      const { data, error } = await client!
-        .from("videos")
-        .select("id,title,description,title_en,description_en,video_path,thumbnail_path,is_published,sort_order,created_at")
-        .eq("is_published", true)
-        .order("sort_order", { ascending: false })
-        .order("created_at", { ascending: false });
+      const [videosRes, articlesRes] = await Promise.all([
+        client!
+          .from("videos")
+          .select(
+            "id,title,description,title_en,description_en,video_path,thumbnail_path,is_published,sort_order,created_at"
+          )
+          .eq("is_published", true)
+          .order("sort_order", { ascending: false })
+          .order("created_at", { ascending: false }),
+        client!
+          .from("articles")
+          .select(
+            "id,title,content,title_en,content_en,image_path,is_published,sort_order,created_at"
+          )
+          .eq("is_published", true)
+          .order("sort_order", { ascending: false })
+          .order("created_at", { ascending: false }),
+      ]);
 
       if (!mounted) return;
       setLoading(false);
 
-      if (error) {
-        toast.error(`Impossible de charger les vidéos: ${error.message}`);
+      if (videosRes.error) {
+        toast.error(`Impossible de charger les vidéos: ${videosRes.error.message}`);
         setVideos([]);
-        return;
+      }
+      if (articlesRes.error) {
+        toast.error(`Impossible de charger les articles: ${articlesRes.error.message}`);
+        setArticles([]);
       }
 
       const isEn = locale === "en";
+      const videoRows = (videosRes.data ?? []) as VideoDbRow[];
+      const articleRows = (articlesRes.data ?? []) as ArticleDbRow[];
+
       const mapped =
-        (data ?? []).map((row: any) => {
-          const title = (isEn ? row.title_en ?? row.title : row.title) as string;
-          const description = (isEn ? row.description_en ?? row.description : row.description) as string | null;
+        videoRows.map((row) => {
+          const title = isEn ? row.title_en ?? row.title : row.title;
+          const description = isEn
+            ? row.description_en ?? row.description
+            : row.description;
           return {
-            id: row.id as string,
-            thumbnail: getPublicUrl(row.thumbnail_path as string),
+            id: row.id,
+            thumbnail: getPublicUrl(row.thumbnail_path),
             title: title ?? "",
             description: description ?? "",
-            videoUrl: getPublicUrl(row.video_path as string),
+            videoUrl: getPublicUrl(row.video_path),
+          };
+        }) ?? [];
+      const mappedArticles =
+        articleRows.map((row) => {
+          const title = isEn ? row.title_en ?? row.title : row.title;
+          const content = isEn ? row.content_en ?? row.content : row.content;
+          return {
+            id: row.id,
+            title: title ?? "",
+            content: content ?? "",
+            image: getPublicUrl(row.image_path),
           };
         }) ?? [];
 
       setVideos(mapped);
+      setArticles(mappedArticles);
     })();
 
     return () => {
@@ -158,6 +195,26 @@ export default function CommunicationPageClient() {
               ))
             )}
           </div>
+
+          <section className="mt-20">
+            <div className="flex items-center gap-4 mb-8">
+              <span className="w-6 h-[1px] bg-gold-400" />
+              <h2 className="text-3xl md:text-4xl font-serif text-primary-100">
+                {t.articlesTitle}
+              </h2>
+            </div>
+            {loading ? (
+              <div className="text-primary-300 text-sm">{t.loading}</div>
+            ) : articles.length === 0 ? (
+              <div className="text-primary-300 text-sm">{t.emptyArticles}</div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+                {articles.map((article, index) => (
+                  <ArticleCard key={article.id} article={article} index={index} />
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </main>
 
@@ -178,6 +235,32 @@ interface Video {
   title: string;
   description: string;
   videoUrl: string;
+}
+
+interface VideoDbRow {
+  id: string;
+  title: string;
+  description: string | null;
+  title_en: string | null;
+  description_en: string | null;
+  video_path: string;
+  thumbnail_path: string;
+}
+
+interface ArticleDbRow {
+  id: string;
+  title: string;
+  content: string;
+  title_en: string | null;
+  content_en: string | null;
+  image_path: string;
+}
+
+interface Article {
+  id: string;
+  title: string;
+  content: string;
+  image: string;
 }
 
 function VideoCard({
@@ -308,6 +391,36 @@ function VideoModal({ video, onClose }: { video: Video; onClose: () => void }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function ArticleCard({ article, index }: { article: Article; index: number }) {
+  return (
+    <motion.article
+      className="group"
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
+    >
+      <div className="relative aspect-video mb-6 overflow-hidden rounded-lg bg-navy-800 w-full">
+        <img
+          src={article.image}
+          alt={article.title}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950/70 to-transparent pointer-events-none" />
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="text-xl md:text-2xl font-serif text-primary-100 group-hover:text-gold-400 transition-colors duration-300">
+          {article.title}
+        </h3>
+        <p className="text-primary-400 leading-relaxed whitespace-pre-line">
+          {article.content}
+        </p>
+      </div>
+    </motion.article>
   );
 }
 

@@ -19,6 +19,19 @@ type VideoRow = {
   updated_at: string;
 };
 
+type ArticleRow = {
+  id: string;
+  title: string;
+  content: string;
+  title_en?: string | null;
+  content_en?: string | null;
+  image_path: string;
+  is_published: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
 function sanitizeFilename(name: string) {
   return name
     .trim()
@@ -112,13 +125,12 @@ export default function AdminPage() {
             <div className="flex items-center gap-4 mb-3">
               <span className="w-6 h-[1px] bg-gold-400" />
               <h1 className="text-3xl md:text-4xl font-serif text-primary-100">
-                Admin · Vidéos
+                Admin · Contenus
               </h1>
             </div>
             <p className="text-primary-400 text-sm max-w-2xl">
               Connexion Supabase Auth requise. Ici tu peux ajouter, éditer et
-              publier les vidéos (vidéo + thumbnail) stockées dans Supabase
-              Storage.
+              publier les vidéos et les articles stockés dans Supabase.
             </p>
           </div>
 
@@ -130,7 +142,14 @@ export default function AdminPage() {
           </Link>
         </div>
 
-        {!session ? <LoginPanel /> : <VideosDashboard />}
+        {!session ? (
+          <LoginPanel />
+        ) : (
+          <div className="space-y-8">
+            <VideosDashboard />
+            <ArticlesDashboard />
+          </div>
+        )}
       </div>
     </main>
   );
@@ -804,6 +823,440 @@ function VideoForm({
             className="rounded-lg bg-gold-500 text-navy-950 font-medium px-4 py-2 text-sm hover:bg-gold-400 transition-colors disabled:opacity-60"
           >
             {saving ? "Téléversement…" : isCreate ? "Ajouter" : "Enregistrer"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function ArticlesDashboard() {
+  const client = supabase!;
+  const [articles, setArticles] = useState<ArticleRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<ArticleRow | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const refresh = async () => {
+    setLoading(true);
+    const { data, error } = await client
+      .from("articles")
+      .select("*")
+      .order("sort_order", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    setLoading(false);
+    if (error) {
+      toast.error(`Chargement impossible: ${error.message}`);
+      return;
+    }
+    setArticles((data ?? []) as ArticleRow[]);
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const onTogglePublished = async (row: ArticleRow) => {
+    const { error } = await client
+      .from("articles")
+      .update({ is_published: !row.is_published })
+      .eq("id", row.id);
+    if (error) {
+      toast.error(`Échec: ${error.message}`);
+      return;
+    }
+    toast.success(row.is_published ? "Dépublié." : "Publié.");
+    refresh();
+  };
+
+  const onDelete = async (row: ArticleRow) => {
+    const ok = window.confirm(
+      `Supprimer définitivement "${row.title}" (DB + image Storage) ?`
+    );
+    if (!ok) return;
+
+    const { error: dbError } = await client.from("articles").delete().eq("id", row.id);
+    if (dbError) {
+      toast.error(`Suppression DB impossible: ${dbError.message}`);
+      return;
+    }
+
+    if (row.image_path) {
+      const { error: storageError } = await client
+        .storage
+        .from(SUPABASE_MEDIA_BUCKET)
+        .remove([row.image_path]);
+      if (storageError) {
+        toast.error(`DB supprimée, mais image non supprimée: ${storageError.message}`);
+        refresh();
+        return;
+      }
+    }
+
+    toast.success("Supprimé.");
+    refresh();
+  };
+
+  return (
+    <section className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-xs text-primary-500">
+          Bucket: <span className="text-primary-300">{SUPABASE_MEDIA_BUCKET}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="rounded-lg border border-gold-500/20 bg-gold-500/10 text-gold-300 px-3 py-2 text-sm hover:bg-gold-500/15 transition-colors"
+        >
+          + Ajouter un article
+        </button>
+      </div>
+
+      {(creating || editing) && (
+        <ArticleForm
+          mode={creating ? "create" : "edit"}
+          initial={editing ?? undefined}
+          onClose={() => {
+            setCreating(false);
+            setEditing(null);
+          }}
+          onSaved={() => {
+            setCreating(false);
+            setEditing(null);
+            refresh();
+          }}
+        />
+      )}
+
+      <div className="rounded-2xl border border-gold-500/10 bg-navy-950/60 backdrop-blur">
+        <div className="p-5 border-b border-gold-500/10 flex items-center justify-between">
+          <h2 className="text-primary-100 font-medium">Articles</h2>
+          <button
+            type="button"
+            onClick={refresh}
+            className="text-xs text-primary-400 hover:text-gold-300 transition-colors"
+          >
+            Rafraîchir
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="p-5 text-sm text-primary-300">Chargement…</div>
+        ) : articles.length === 0 ? (
+          <div className="p-5 text-sm text-primary-300">
+            Aucun article pour le moment.
+          </div>
+        ) : (
+          <ul className="divide-y divide-gold-500/10">
+            {articles.map((a) => (
+              <li key={a.id} className="p-5 flex flex-col md:flex-row gap-4">
+                <div className="w-full md:w-56">
+                  <div className="w-full aspect-video rounded-lg overflow-hidden bg-navy-900/50 border border-gold-500/10">
+                    <img
+                      src={getPublicUrl(client, a.image_path)}
+                      alt={a.title}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-primary-100 font-medium truncate">
+                          {a.title}
+                        </h3>
+                        <span
+                          className={[
+                            "text-[11px] px-2 py-0.5 rounded-full border",
+                            a.is_published
+                              ? "border-emerald-500/20 text-emerald-300 bg-emerald-500/10"
+                              : "border-amber-500/20 text-amber-300 bg-amber-500/10",
+                          ].join(" ")}
+                        >
+                          {a.is_published ? "Publié" : "Brouillon"}
+                        </span>
+                      </div>
+                      {a.content ? (
+                        <p className="text-primary-400 text-sm mt-2 line-clamp-3 whitespace-pre-line">
+                          {a.content}
+                        </p>
+                      ) : null}
+                      <p className="text-primary-600 text-xs mt-2">
+                        Ordre: {a.sort_order}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(a)}
+                        className="rounded-lg border border-gold-500/15 bg-navy-950/30 text-primary-200 px-3 py-2 text-sm hover:border-gold-500/30 hover:text-gold-200 transition-colors"
+                      >
+                        Éditer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onTogglePublished(a)}
+                        className="rounded-lg border border-gold-500/15 bg-navy-950/30 text-primary-200 px-3 py-2 text-sm hover:border-gold-500/30 hover:text-gold-200 transition-colors"
+                      >
+                        {a.is_published ? "Dépublier" : "Publier"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDelete(a)}
+                        className="rounded-lg border border-red-500/20 bg-red-500/10 text-red-200 px-3 py-2 text-sm hover:bg-red-500/15 transition-colors"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ArticleForm({
+  mode,
+  initial,
+  onClose,
+  onSaved,
+}: {
+  mode: "create" | "edit";
+  initial?: ArticleRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const client = supabase!;
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [content, setContent] = useState(initial?.content ?? "");
+  const [titleEn, setTitleEn] = useState(initial?.title_en ?? "");
+  const [contentEn, setContentEn] = useState(initial?.content_en ?? "");
+  const [isPublished, setIsPublished] = useState(initial?.is_published ?? true);
+  const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 0);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const isCreate = mode === "create";
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!content.trim()) {
+      toast.error("Le contenu est requis.");
+      return;
+    }
+
+    if (isCreate && !imageFile) {
+      toast.error("L'image est requise pour créer.");
+      return;
+    }
+
+    setSaving(true);
+    const id = initial?.id ?? crypto.randomUUID();
+    const nowPrefix = `${Date.now()}`;
+    let nextImagePath = initial?.image_path ?? "";
+
+    try {
+      if (imageFile) {
+        const filename = sanitizeFilename(imageFile.name);
+        const path = `articles/${id}/${nowPrefix}-${filename}`;
+        const { error: uploadError } = await client.storage
+          .from(SUPABASE_MEDIA_BUCKET)
+          .upload(path, imageFile, {
+            cacheControl: "31536000",
+            upsert: false,
+            contentType: imageFile.type || undefined,
+          });
+        if (uploadError) throw uploadError;
+
+        if (initial?.image_path) {
+          await client.storage.from(SUPABASE_MEDIA_BUCKET).remove([initial.image_path]);
+        }
+        nextImagePath = path;
+      }
+
+      const payload = {
+        title,
+        content,
+        title_en: titleEn || null,
+        content_en: contentEn || null,
+        image_path: nextImagePath,
+        is_published: isPublished,
+        sort_order: sortOrder,
+      };
+
+      if (isCreate) {
+        const { error } = await client.from("articles").insert({ id, ...payload });
+        if (error) throw error;
+        toast.success("Article ajouté.");
+      } else {
+        const { error } = await client
+          .from("articles")
+          .update(payload)
+          .eq("id", id);
+        if (error) throw error;
+        toast.success("Article mis à jour.");
+      }
+
+      onSaved();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Erreur inconnue pendant l'opération.";
+      toast.error(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="relative rounded-2xl border border-gold-500/10 bg-navy-950/60 backdrop-blur p-6 overflow-hidden">
+      {saving ? (
+        <div className="absolute inset-0 z-10 bg-navy-950/60 backdrop-blur-sm flex items-center justify-center">
+          <div className="rounded-2xl border border-gold-500/15 bg-navy-950/80 px-5 py-4 flex items-center gap-3">
+            <span className="inline-flex w-5 h-5 rounded-full border-2 border-gold-400/30 border-t-gold-400 animate-spin" />
+            <div className="text-primary-100 text-sm font-medium">Enregistrement…</div>
+          </div>
+        </div>
+      ) : null}
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h3 className="text-primary-100 font-medium">
+            {isCreate ? "Ajouter un article" : "Éditer l'article"}
+          </h3>
+          <p className="text-primary-500 text-xs mt-1">
+            {isCreate
+              ? "Upload de l'image puis création en base."
+              : "Tu peux modifier les champs et remplacer l'image."}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-primary-400 hover:text-gold-300 transition-colors text-sm"
+        >
+          Fermer
+        </button>
+      </div>
+
+      <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
+            Français
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Titre (FR)
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Titre de l'article"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Contenu (FR)
+            </label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              required
+              className="w-full min-h-[120px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Texte de l'article"
+            />
+          </div>
+        </div>
+
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
+            English
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Title (EN)
+            </label>
+            <input
+              value={titleEn}
+              onChange={(e) => setTitleEn(e.target.value)}
+              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Article title"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Content (EN)
+            </label>
+            <textarea
+              value={contentEn}
+              onChange={(e) => setContentEn(e.target.value)}
+              className="w-full min-h-[120px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Article content"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-xs tracking-wider text-primary-400 uppercase">
+            Ordre d’affichage
+          </label>
+          <input
+            value={sortOrder}
+            onChange={(e) => setSortOrder(Number(e.target.value))}
+            type="number"
+            className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+          />
+        </div>
+
+        <div className="flex items-end">
+          <label className="inline-flex items-center gap-2 text-sm text-primary-200">
+            <input
+              type="checkbox"
+              checked={isPublished}
+              onChange={(e) => setIsPublished(e.target.checked)}
+              className="accent-gold-400"
+            />
+            Publié
+          </label>
+        </div>
+
+        <div className="md:col-span-2 space-y-2">
+          <label className="block text-xs tracking-wider text-primary-400 uppercase">
+            Image {isCreate ? "(requise)" : "(optionnelle)"}
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+            className="w-full text-primary-200 text-sm file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gold-500/10 file:text-gold-200 hover:file:bg-gold-500/15"
+          />
+        </div>
+
+        <div className="md:col-span-2 flex items-center justify-end gap-2 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="rounded-lg border border-gold-500/10 bg-navy-950/30 text-primary-300 px-4 py-2 text-sm hover:border-gold-500/25 hover:text-gold-200 transition-colors disabled:opacity-60"
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-lg bg-gold-500 text-navy-950 font-medium px-4 py-2 text-sm hover:bg-gold-400 transition-colors disabled:opacity-60"
+          >
+            {saving ? "Enregistrement…" : isCreate ? "Ajouter" : "Enregistrer"}
           </button>
         </div>
       </form>
