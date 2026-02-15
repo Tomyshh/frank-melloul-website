@@ -99,7 +99,7 @@ export default function RootLayout({
         email: "contact@melloulandpartners.com",
         address: "Paris, Dubai",
         sameAs: [
-          "https://www.linkedin.com/in/frank-melloul-158470/?originalSubdomain=fr",
+          "https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true",
           "https://x.com/frankmelloul",
           "https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx",
           "https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr",
@@ -111,7 +111,7 @@ export default function RootLayout({
         url: "https://frank-melloul-website.onrender.com/",
         worksFor: { "@type": "Organization", name: "Melloul & Partners" },
         sameAs: [
-          "https://www.linkedin.com/in/frank-melloul-158470/?originalSubdomain=fr",
+          "https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true",
           "https://x.com/frankmelloul",
           "https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx",
           "https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr",

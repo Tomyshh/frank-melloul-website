@@ -79,7 +79,7 @@ export default function Footer() {
           >
             {/* LinkedIn */}
             <Link
-              href="https://www.linkedin.com/in/frank-melloul-158470/?originalSubdomain=fr"
+              href="https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true"
               target="_blank"
               rel="noopener noreferrer"
               className="group"
