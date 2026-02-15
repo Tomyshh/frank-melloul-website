@@ -35,7 +35,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-navy-950 border-t border-gold-500/10">
+    <footer className="relative z-10 bg-navy-950 border-t border-gold-500/10">
       <div className="container mx-auto px-6 md:px-12 lg:px-20 py-16">
         <div className="flex flex-col items-center gap-8">
           {/* Logo */}

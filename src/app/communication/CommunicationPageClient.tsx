@@ -96,9 +96,9 @@ export default function CommunicationPageClient() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-navy-950 pt-32 pb-20">
-        {/* Background gradient */}
-        <div className="fixed inset-0 bg-gradient-to-b from-navy-950 via-navy-900 to-navy-950 pointer-events-none" />
+      <main className="min-h-screen bg-navy-950 pt-40 pb-24">
+        {/* Background gradient - z-0 pour rester derrière le contenu et le footer au scroll */}
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-navy-950 via-navy-900 to-navy-950 pointer-events-none" />
 
         <div className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10">
           {/* Back link */}
