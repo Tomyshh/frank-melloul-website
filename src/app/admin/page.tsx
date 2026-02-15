@@ -9,6 +9,8 @@ type VideoRow = {
   id: string;
   title: string;
   description: string | null;
+  title_en?: string | null;
+  description_en?: string | null;
   video_path: string;
   thumbnail_path: string;
   is_published: boolean;
@@ -538,6 +540,8 @@ function VideoForm({
   const client = supabase!;
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
+  const [titleEn, setTitleEn] = useState(initial?.title_en ?? "");
+  const [descriptionEn, setDescriptionEn] = useState(initial?.description_en ?? "");
   const [isPublished, setIsPublished] = useState(initial?.is_published ?? true);
   const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 0);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -553,7 +557,7 @@ function VideoForm({
     e.preventDefault();
 
     if (isCreate && (!videoFile || !thumbFile)) {
-      toast.error("Vidéo et thumbnail sont requis pour créer.");
+      toast.error("Vidéo et photo sont requis pour créer.");
       return;
     }
 
@@ -600,31 +604,26 @@ function VideoForm({
         nextVideoPath = uploadedVideoPath;
       }
 
+      const payload = {
+        title,
+        description: description || null,
+        title_en: titleEn || null,
+        description_en: descriptionEn || null,
+        video_path: nextVideoPath,
+        thumbnail_path: nextThumbPath,
+        is_published: isPublished,
+        sort_order: sortOrder,
+      };
       if (isCreate) {
         setSavingStep("db");
-        const { error } = await client.from("videos").insert({
-          id,
-          title,
-          description: description || null,
-          video_path: nextVideoPath,
-          thumbnail_path: nextThumbPath,
-          is_published: isPublished,
-          sort_order: sortOrder,
-        });
+        const { error } = await client.from("videos").insert({ id, ...payload });
         if (error) throw error;
         toast.success("Vidéo ajoutée.");
       } else {
         setSavingStep("db");
         const { error } = await client
           .from("videos")
-          .update({
-            title,
-            description: description || null,
-            video_path: nextVideoPath,
-            thumbnail_path: nextThumbPath,
-            is_published: isPublished,
-            sort_order: sortOrder,
-          })
+          .update(payload)
           .eq("id", id);
         if (error) throw error;
         toast.success("Vidéo mise à jour.");
@@ -653,7 +652,7 @@ function VideoForm({
               </div>
               <div className="text-primary-400 text-xs">
                 {savingStep === "thumbnail"
-                  ? "Envoi du thumbnail"
+                  ? "Envoi de la photo"
                   : savingStep === "video"
                     ? "Envoi de la vidéo (peut prendre du temps)"
                     : "Enregistrement en base"}
@@ -669,7 +668,7 @@ function VideoForm({
           </h3>
           <p className="text-primary-500 text-xs mt-1">
             {isCreate
-              ? "Upload: thumbnail + vidéo, puis création en base."
+              ? "Upload: photo + vidéo, puis création en base."
               : "Tu peux modifier les infos et remplacer les fichiers."}
           </p>
         </div>
@@ -683,29 +682,63 @@ function VideoForm({
       </div>
 
       <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs tracking-wider text-primary-400 uppercase">
-            Titre
-          </label>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-            placeholder="Titre de la vidéo"
-          />
+        {/* Section Français */}
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
+            Français
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Titre (FR)
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Titre de la vidéo"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Description (FR)
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full min-h-[80px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Description (optionnel)"
+            />
+          </div>
         </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <label className="block text-xs tracking-wider text-primary-400 uppercase">
-            Description
-          </label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full min-h-[90px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-            placeholder="Description (optionnel)"
-          />
+        {/* Section English */}
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
+            English
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Title (EN)
+            </label>
+            <input
+              value={titleEn}
+              onChange={(e) => setTitleEn(e.target.value)}
+              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Video title"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Description (EN)
+            </label>
+            <textarea
+              value={descriptionEn}
+              onChange={(e) => setDescriptionEn(e.target.value)}
+              className="w-full min-h-[80px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Description (optional)"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
@@ -734,7 +767,7 @@ function VideoForm({
 
         <div className="space-y-2">
           <label className="block text-xs tracking-wider text-primary-400 uppercase">
-            Thumbnail {isCreate ? "(requis)" : "(optionnel)"}
+            Photo {isCreate ? "(requis)" : "(optionnel)"}
           </label>
           <input
             type="file"

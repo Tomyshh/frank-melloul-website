@@ -62,7 +62,7 @@ export default function CommunicationPageClient() {
       setLoading(true);
       const { data, error } = await client!
         .from("videos")
-        .select("id,title,description,video_path,thumbnail_path,is_published,sort_order,created_at")
+        .select("id,title,description,title_en,description_en,video_path,thumbnail_path,is_published,sort_order,created_at")
         .eq("is_published", true)
         .order("sort_order", { ascending: false })
         .order("created_at", { ascending: false });
@@ -76,14 +76,19 @@ export default function CommunicationPageClient() {
         return;
       }
 
+      const isEn = locale === "en";
       const mapped =
-        (data ?? []).map((row: any) => ({
-          id: row.id as string,
-          thumbnail: getPublicUrl(row.thumbnail_path as string),
-          title: row.title as string,
-          description: (row.description as string | null) ?? "",
-          videoUrl: getPublicUrl(row.video_path as string),
-        })) ?? [];
+        (data ?? []).map((row: any) => {
+          const title = (isEn ? row.title_en ?? row.title : row.title) as string;
+          const description = (isEn ? row.description_en ?? row.description : row.description) as string | null;
+          return {
+            id: row.id as string,
+            thumbnail: getPublicUrl(row.thumbnail_path as string),
+            title: title ?? "",
+            description: description ?? "",
+            videoUrl: getPublicUrl(row.video_path as string),
+          };
+        }) ?? [];
 
       setVideos(mapped);
     })();
@@ -91,7 +96,7 @@ export default function CommunicationPageClient() {
     return () => {
       mounted = false;
     };
-  }, [getPublicUrl, supabaseReady]);
+  }, [getPublicUrl, supabaseReady, locale]);
 
   return (
     <>
