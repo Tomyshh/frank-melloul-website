@@ -39,6 +39,18 @@ function sanitizeFilename(name: string) {
     .replace(/[^a-zA-Z0-9._-]/g, "");
 }
 
+function getShareUrl(videoId: string) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/communication?video=${videoId}`;
+}
+
+function shareVideo(videoId: string) {
+  const url = getShareUrl(videoId);
+  navigator.clipboard.writeText(url).then(() => {
+    toast.success("Lien public copié !");
+  });
+}
+
 function getPublicUrl(client: NonNullable<typeof supabase>, path: string) {
   const { data } = client.storage.from(SUPABASE_MEDIA_BUCKET).getPublicUrl(path);
   return data.publicUrl;
@@ -349,6 +361,7 @@ function VideosDashboard() {
           videoUrl={getPublicUrl(client, previewing.video_path)}
           posterUrl={getPublicUrl(client, previewing.thumbnail_path)}
           onClose={() => setPreviewing(null)}
+          onShare={() => shareVideo(previewing.id)}
         />
       ) : null}
 
@@ -430,13 +443,23 @@ function VideosDashboard() {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
                         onClick={() => setPreviewing(v)}
                         className="rounded-lg border border-gold-500/15 bg-navy-950/30 text-primary-200 px-3 py-2 text-sm hover:border-gold-500/30 hover:text-gold-200 transition-colors"
                       >
                         Voir
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => shareVideo(v.id)}
+                        className="rounded-lg border border-gold-500/15 bg-navy-950/30 text-primary-200 px-3 py-2 text-sm hover:border-gold-500/30 hover:text-gold-200 transition-colors inline-flex items-center gap-1.5"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 1 0 5.368-2.684 3 3 0 0 0-5.368 2.684Zm0 9.316a3 3 0 1 0 5.368 2.684 3 3 0 0 0-5.368-2.684Z" />
+                        </svg>
+                        Partager
                       </button>
                       <button
                         type="button"
@@ -477,12 +500,14 @@ function AdminVideoModal({
   videoUrl,
   posterUrl,
   onClose,
+  onShare,
 }: {
   title: string;
   description: string;
   videoUrl: string;
   posterUrl: string;
   onClose: () => void;
+  onShare: () => void;
 }) {
   const [isLoading, setIsLoading] = useState(true);
 
@@ -511,13 +536,25 @@ function AdminVideoModal({
               <div className="text-primary-400 text-sm truncate">{description}</div>
             ) : null}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-primary-400 hover:text-gold-300 transition-colors"
-          >
-            Fermer
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={onShare}
+              className="inline-flex items-center gap-1.5 text-primary-400 hover:text-gold-400 text-sm transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 1 0 5.368-2.684 3 3 0 0 0-5.368 2.684Zm0 9.316a3 3 0 1 0 5.368 2.684 3 3 0 0 0-5.368-2.684Z" />
+              </svg>
+              Partager
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-primary-400 hover:text-gold-300 transition-colors"
+            >
+              Fermer
+            </button>
+          </div>
         </div>
 
         <div className="bg-black relative aspect-video">

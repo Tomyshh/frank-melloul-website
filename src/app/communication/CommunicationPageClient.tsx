@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
-// Translations for this page
 const pageTranslations = {
   en: {
     title: "Communication",
@@ -21,6 +21,8 @@ const pageTranslations = {
     loading: "Loading…",
     empty: "No videos available yet.",
     emptyArticles: "No posts available yet.",
+    share: "Share",
+    linkCopied: "Link copied to clipboard!",
   },
   fr: {
     title: "Communication",
@@ -32,16 +34,26 @@ const pageTranslations = {
     loading: "Chargement…",
     empty: "Aucune vidéo disponible pour le moment.",
     emptyArticles: "Aucun article disponible pour le moment.",
+    share: "Partager",
+    linkCopied: "Lien copié !",
   },
 } as const;
+
+function getShareUrl(videoId: string) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}/communication?video=${videoId}`;
+}
 
 export default function CommunicationPageClient() {
   const { locale } = useLanguage();
   const t = pageTranslations[locale];
+  const searchParams = useSearchParams();
+  const videoParam = searchParams.get("video");
   const [videos, setVideos] = useState<Video[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [active, setActive] = useState<Video | null>(null);
+  const deepLinkHandled = useRef(false);
   const client = supabase;
   const supabaseReady = Boolean(client);
 
@@ -50,6 +62,20 @@ export default function CommunicationPageClient() {
     () => (path: string) =>
       client?.storage.from(bucket).getPublicUrl(path).data.publicUrl ?? "",
     [bucket, client]
+  );
+
+  const shareVideo = useCallback(
+    (video: Video) => {
+      const url = getShareUrl(video.id);
+      if (navigator.share) {
+        navigator.share({ title: video.title, url }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(url).then(() => {
+          toast.success(t.linkCopied);
+        });
+      }
+    },
+    [t.linkCopied]
   );
 
   useEffect(() => {
@@ -128,12 +154,20 @@ export default function CommunicationPageClient() {
 
       setVideos(mapped);
       setArticles(mappedArticles);
+
+      if (videoParam && !deepLinkHandled.current) {
+        const target = mapped.find((v) => v.id === videoParam);
+        if (target) {
+          deepLinkHandled.current = true;
+          setActive(target);
+        }
+      }
     })();
 
     return () => {
       mounted = false;
     };
-  }, [getPublicUrl, supabaseReady, locale]);
+  }, [getPublicUrl, supabaseReady, locale, videoParam]);
 
   return (
     <>
@@ -190,7 +224,9 @@ export default function CommunicationPageClient() {
                   video={video}
                   index={index}
                   watchText={t.watchVideo}
+                  shareText={t.share}
                   onOpen={() => setActive(video)}
+                  onShare={() => shareVideo(video)}
                 />
               ))
             )}
@@ -221,7 +257,9 @@ export default function CommunicationPageClient() {
       {active ? (
         <VideoModal
           video={active}
+          shareText={t.share}
           onClose={() => setActive(null)}
+          onShare={() => shareVideo(active)}
         />
       ) : null}
       <Footer />
@@ -263,16 +301,38 @@ interface Article {
   image: string;
 }
 
+function ShareIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 1 1 0-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 1 0 5.368-2.684 3 3 0 0 0-5.368 2.684Zm0 9.316a3 3 0 1 0 5.368 2.684 3 3 0 0 0-5.368-2.684Z"
+      />
+    </svg>
+  );
+}
+
 function VideoCard({
   video,
   index,
   watchText,
+  shareText,
   onOpen,
+  onShare,
 }: {
   video: Video;
   index: number;
   watchText: string;
+  shareText: string;
   onOpen: () => void;
+  onShare: () => void;
 }) {
   return (
     <motion.article
@@ -281,7 +341,6 @@ function VideoCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
     >
-      {/* Thumbnail */}
       <button
         type="button"
         onClick={onOpen}
@@ -292,7 +351,6 @@ function VideoCard({
           alt={video.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <motion.div
             className="w-16 h-16 rounded-full bg-gold-500 flex items-center justify-center"
@@ -308,30 +366,51 @@ function VideoCard({
             </svg>
           </motion.div>
         </div>
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950/60 to-transparent pointer-events-none" />
       </button>
 
-      {/* Content */}
       <div className="space-y-3">
         <h3 className="text-xl md:text-2xl font-serif text-primary-100 group-hover:text-gold-400 transition-colors duration-300">
           {video.title}
         </h3>
         <p className="text-primary-400 leading-relaxed">{video.description}</p>
-        <motion.button
-          className="inline-flex items-center gap-2 text-gold-500 text-sm font-medium tracking-wider uppercase mt-2"
-          whileHover={{ x: 5 }}
-          onClick={onOpen}
-        >
-          {watchText}
-          <span>→</span>
-        </motion.button>
+        <div className="flex items-center gap-4 mt-2">
+          <motion.button
+            className="inline-flex items-center gap-2 text-gold-500 text-sm font-medium tracking-wider uppercase"
+            whileHover={{ x: 5 }}
+            onClick={onOpen}
+          >
+            {watchText}
+            <span>→</span>
+          </motion.button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare();
+            }}
+            className="inline-flex items-center gap-1.5 text-primary-400 hover:text-gold-400 text-sm transition-colors"
+          >
+            <ShareIcon className="w-4 h-4" />
+            {shareText}
+          </button>
+        </div>
       </div>
     </motion.article>
   );
 }
 
-function VideoModal({ video, onClose }: { video: Video; onClose: () => void }) {
+function VideoModal({
+  video,
+  shareText,
+  onClose,
+  onShare,
+}: {
+  video: Video;
+  shareText: string;
+  onClose: () => void;
+  onShare: () => void;
+}) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -359,16 +438,25 @@ function VideoModal({ video, onClose }: { video: Video; onClose: () => void }) {
               <div className="text-primary-400 text-sm truncate">{video.description}</div>
             ) : null}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-primary-400 hover:text-gold-300 transition-colors"
-          >
-            Fermer
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={onShare}
+              className="inline-flex items-center gap-1.5 text-primary-400 hover:text-gold-400 text-sm transition-colors"
+            >
+              <ShareIcon className="w-4 h-4" />
+              {shareText}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-primary-400 hover:text-gold-300 transition-colors"
+            >
+              Fermer
+            </button>
+          </div>
         </div>
 
-        {/* Cadre fixe 16:9 pour éviter que le poster change de taille au chargement */}
         <div className="bg-black relative aspect-video">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
