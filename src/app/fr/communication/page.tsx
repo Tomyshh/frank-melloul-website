@@ -24,6 +24,7 @@ export async function generateMetadata({
 
   let ogTitle = DEFAULT_TITLE;
   let ogDesc = DEFAULT_DESC;
+  const fallbackImage = "/logo-gold.png";
   let ogImage: string | undefined;
   let ogUrl = "/fr/communication";
 
@@ -43,6 +44,8 @@ export async function generateMetadata({
     }
   }
 
+  const finalImage = ogImage ?? fallbackImage;
+
   return {
     title: ogTitle,
     description: ogDesc,
@@ -56,13 +59,13 @@ export async function generateMetadata({
       url: ogUrl,
       locale: "fr_FR",
       type: "website",
-      ...(ogImage ? { images: [{ url: ogImage, width: 1280, height: 720 }] } : {}),
+      images: [{ url: finalImage }],
     },
     twitter: {
-      card: ogImage ? "summary_large_image" : "summary",
+      card: "summary_large_image",
       title: ogTitle,
       description: ogDesc,
-      ...(ogImage ? { images: [ogImage] } : {}),
+      images: [finalImage],
     },
   };
 }
