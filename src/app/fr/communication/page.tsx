@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
 import CommunicationPageClient from "@/app/communication/CommunicationPageClient";
 
+const SITE_URL = "https://melloulandpartners.com";
 const DEFAULT_TITLE = "Communication | Melloul & Partners";
 const DEFAULT_DESC =
   "Apparitions médiatiques, interviews et perspectives de Melloul & Partners.";
+const FALLBACK_IMAGE = `${SITE_URL}/logo-gold.png`;
 
-function thumbnailUrl(path: string) {
+function thumbnailUrl(path: string): string {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!base) return undefined;
+  if (!base) return FALLBACK_IMAGE;
   return `${base}/storage/v1/object/public/${SUPABASE_MEDIA_BUCKET}/${path}`;
 }
 
@@ -24,9 +26,8 @@ export async function generateMetadata({
 
   let ogTitle = DEFAULT_TITLE;
   let ogDesc = DEFAULT_DESC;
-  const fallbackImage = "/logo-gold.png";
-  let ogImage: string | undefined;
-  let ogUrl = "/fr/communication";
+  let ogImage = FALLBACK_IMAGE;
+  let ogUrl = `${SITE_URL}/fr/communication`;
 
   if (videoId && supabase) {
     const { data } = await supabase
@@ -39,12 +40,12 @@ export async function generateMetadata({
     if (data) {
       ogTitle = data.title + " | Melloul & Partners";
       ogDesc = data.description ?? DEFAULT_DESC;
-      ogImage = thumbnailUrl(data.thumbnail_path);
-      ogUrl = `/fr/communication?video=${videoId}`;
+      ogImage = data.thumbnail_path
+        ? thumbnailUrl(data.thumbnail_path)
+        : FALLBACK_IMAGE;
+      ogUrl = `${SITE_URL}/fr/communication?video=${videoId}`;
     }
   }
-
-  const finalImage = ogImage ?? fallbackImage;
 
   return {
     title: ogTitle,
@@ -59,13 +60,21 @@ export async function generateMetadata({
       url: ogUrl,
       locale: "fr_FR",
       type: "website",
-      images: [{ url: finalImage }],
+      images: [
+        {
+          url: ogImage,
+          secureUrl: ogImage,
+          width: 1200,
+          height: 630,
+          alt: ogTitle,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: ogTitle,
       description: ogDesc,
-      images: [finalImage],
+      images: [ogImage],
     },
   };
 }
@@ -73,4 +82,3 @@ export async function generateMetadata({
 export default function CommunicationFrPage() {
   return <CommunicationPageClient />;
 }
-

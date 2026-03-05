@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     "international affairs",
   ],
   authors: [{ name: "Frank Melloul" }],
-  metadataBase: new URL("https://frank-melloul-website.onrender.com"),
+  metadataBase: new URL("https://melloulandpartners.com"),
   alternates: { canonical: "/" },
   robots: {
     index: true,
@@ -94,8 +94,8 @@ export default function RootLayout({
       {
         "@type": "Organization",
         name: "Melloul & Partners",
-        url: "https://frank-melloul-website.onrender.com/",
-        logo: "https://frank-melloul-website.onrender.com/only_gold_logo.png",
+        url: "https://melloulandpartners.com/",
+        logo: "https://melloulandpartners.com/only_gold_logo.png",
         email: "contact@melloulandpartners.com",
         address: "Paris, Dubai",
         sameAs: [
@@ -108,7 +108,7 @@ export default function RootLayout({
       {
         "@type": "Person",
         name: "Frank Melloul",
-        url: "https://frank-melloul-website.onrender.com/",
+        url: "https://melloulandpartners.com/",
         worksFor: { "@type": "Organization", name: "Melloul & Partners" },
         sameAs: [
           "https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true",
