@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
 
@@ -510,6 +510,8 @@ function AdminVideoModal({
   onShare: () => void;
 }) {
   const [isLoading, setIsLoading] = useState(true);
+  const [ratio, setRatio] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -518,6 +520,15 @@ function AdminVideoModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const handleMetadata = () => {
+    const el = videoRef.current;
+    if (el?.videoWidth && el?.videoHeight) {
+      setRatio(el.videoWidth / el.videoHeight);
+    }
+  };
+
+  const isPortrait = ratio !== null && ratio < 1;
 
   return (
     <div
@@ -528,7 +539,10 @@ function AdminVideoModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-5xl rounded-2xl overflow-hidden border border-gold-500/10 bg-navy-950/95">
+      <div
+        className="w-full rounded-2xl overflow-hidden border border-gold-500/10 bg-navy-950/95 transition-[max-width] duration-300"
+        style={{ maxWidth: isPortrait ? `min(24rem, calc(75vh * ${ratio}))` : "64rem" }}
+      >
         <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-gold-500/10">
           <div className="min-w-0">
             <div className="text-primary-100 font-medium truncate">{title}</div>
@@ -557,19 +571,24 @@ function AdminVideoModal({
           </div>
         </div>
 
-        <div className="bg-black relative aspect-video">
+        <div
+          className="bg-black relative"
+          style={{ aspectRatio: ratio ? `${ratio}` : "16/9" }}
+        >
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="inline-flex w-10 h-10 rounded-full border-2 border-gold-400/30 border-t-gold-400 animate-spin" />
             </div>
           ) : null}
           <video
+            ref={videoRef}
             src={videoUrl}
             controls
             playsInline
             className="w-full h-full object-contain"
             poster={posterUrl}
             preload="metadata"
+            onLoadedMetadata={handleMetadata}
             onLoadStart={() => setIsLoading(true)}
             onWaiting={() => setIsLoading(true)}
             onCanPlay={() => setIsLoading(false)}
