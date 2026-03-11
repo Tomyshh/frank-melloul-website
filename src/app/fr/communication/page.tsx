@@ -23,6 +23,8 @@ export async function generateMetadata({
 }: Props): Promise<Metadata> {
   const videoId =
     typeof searchParams.video === "string" ? searchParams.video : undefined;
+  const articleId =
+    typeof searchParams.article === "string" ? searchParams.article : undefined;
 
   let ogTitle = DEFAULT_TITLE;
   let ogDesc = DEFAULT_DESC;
@@ -44,6 +46,22 @@ export async function generateMetadata({
         ? thumbnailUrl(data.thumbnail_path)
         : FALLBACK_IMAGE;
       ogUrl = `${SITE_URL}/fr/communication?video=${videoId}`;
+    }
+  } else if (articleId && supabase) {
+    const { data } = await supabase
+      .from("articles")
+      .select("title,content,image_path")
+      .eq("id", articleId)
+      .eq("is_published", true)
+      .single();
+
+    if (data) {
+      ogTitle = data.title + " | Melloul & Partners";
+      ogDesc = (data.content ?? DEFAULT_DESC).slice(0, 160);
+      ogImage = data.image_path
+        ? thumbnailUrl(data.image_path)
+        : FALLBACK_IMAGE;
+      ogUrl = `${SITE_URL}/fr/communication?article=${articleId}`;
     }
   }
 

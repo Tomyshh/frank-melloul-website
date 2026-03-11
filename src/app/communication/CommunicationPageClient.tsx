@@ -1,11 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
 import { toast } from "sonner";
@@ -23,25 +23,67 @@ const pageTranslations = {
     emptyArticles: "No posts available yet.",
     share: "Share",
     linkCopied: "Link copied to clipboard!",
+    copyLink: "Copy link",
+    tapToUnmute: "Tap to unmute",
   },
   fr: {
     title: "Communication",
     subtitle:
       "Apparitions médiatiques, interviews et perspectives de Melloul & Partners",
     backToHome: "Retour à l'accueil",
-    watchVideo: "Regarder la vidéo",
+    watchVideo: "Regarder",
     articlesTitle: "Articles",
     loading: "Chargement…",
     empty: "Aucune vidéo disponible pour le moment.",
     emptyArticles: "Aucun article disponible pour le moment.",
     share: "Partager",
     linkCopied: "Lien copié !",
+    copyLink: "Copier le lien",
+    tapToUnmute: "Activer le son",
   },
 } as const;
 
-function getShareUrl(videoId: string) {
+type Translations = (typeof pageTranslations)[keyof typeof pageTranslations];
+
+function getShareUrl(type: "video" | "article", id: string) {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
-  return `${origin}/communication?video=${videoId}`;
+  const path = typeof window !== "undefined" ? window.location.pathname : "";
+  const prefix = path.startsWith("/fr") ? "/fr" : "";
+  return `${origin}${prefix}/communication?${type}=${id}`;
+}
+
+interface Video {
+  id: string;
+  thumbnail: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+}
+
+interface VideoDbRow {
+  id: string;
+  title: string;
+  description: string | null;
+  title_en: string | null;
+  description_en: string | null;
+  video_path: string;
+  thumbnail_path: string;
+}
+
+interface ArticleDbRow {
+  id: string;
+  title: string;
+  content: string;
+  title_en: string | null;
+  content_en: string | null;
+  image_path: string;
+}
+
+interface Article {
+  id: string;
+  title: string;
+  content: string;
+  image: string;
 }
 
 export default function CommunicationPageClient() {
@@ -62,20 +104,6 @@ export default function CommunicationPageClient() {
     () => (path: string) =>
       client?.storage.from(bucket).getPublicUrl(path).data.publicUrl ?? "",
     [bucket, client]
-  );
-
-  const shareVideo = useCallback(
-    (video: Video) => {
-      const url = getShareUrl(video.id);
-      if (navigator.share) {
-        navigator.share({ title: video.title, url }).catch(() => {});
-      } else {
-        navigator.clipboard.writeText(url).then(() => {
-          toast.success(t.linkCopied);
-        });
-      }
-    },
-    [t.linkCopied]
   );
 
   useEffect(() => {
@@ -114,11 +142,15 @@ export default function CommunicationPageClient() {
       setLoading(false);
 
       if (videosRes.error) {
-        toast.error(`Impossible de charger les vidéos: ${videosRes.error.message}`);
+        toast.error(
+          `Impossible de charger les vidéos: ${videosRes.error.message}`
+        );
         setVideos([]);
       }
       if (articlesRes.error) {
-        toast.error(`Impossible de charger les articles: ${articlesRes.error.message}`);
+        toast.error(
+          `Impossible de charger les articles: ${articlesRes.error.message}`
+        );
         setArticles([]);
       }
 
@@ -126,31 +158,25 @@ export default function CommunicationPageClient() {
       const videoRows = (videosRes.data ?? []) as VideoDbRow[];
       const articleRows = (articlesRes.data ?? []) as ArticleDbRow[];
 
-      const mapped =
-        videoRows.map((row) => {
-          const title = isEn ? row.title_en ?? row.title : row.title;
-          const description = isEn
-            ? row.description_en ?? row.description
-            : row.description;
-          return {
-            id: row.id,
-            thumbnail: getPublicUrl(row.thumbnail_path),
-            title: title ?? "",
-            description: description ?? "",
-            videoUrl: getPublicUrl(row.video_path),
-          };
-        }) ?? [];
-      const mappedArticles =
-        articleRows.map((row) => {
-          const title = isEn ? row.title_en ?? row.title : row.title;
-          const content = isEn ? row.content_en ?? row.content : row.content;
-          return {
-            id: row.id,
-            title: title ?? "",
-            content: content ?? "",
-            image: getPublicUrl(row.image_path),
-          };
-        }) ?? [];
+      const mapped = videoRows.map((row) => ({
+        id: row.id,
+        thumbnail: getPublicUrl(row.thumbnail_path),
+        title:
+          (isEn ? (row.title_en ?? row.title) : row.title) ?? "",
+        description:
+          (isEn
+            ? (row.description_en ?? row.description)
+            : row.description) ?? "",
+        videoUrl: getPublicUrl(row.video_path),
+      }));
+      const mappedArticles = articleRows.map((row) => ({
+        id: row.id,
+        title:
+          (isEn ? (row.title_en ?? row.title) : row.title) ?? "",
+        content:
+          (isEn ? (row.content_en ?? row.content) : row.content) ?? "",
+        image: getPublicUrl(row.image_path),
+      }));
 
       setVideos(mapped);
       setArticles(mappedArticles);
@@ -173,11 +199,9 @@ export default function CommunicationPageClient() {
     <>
       <Header />
       <main className="min-h-screen bg-navy-950 pt-40 pb-24">
-        {/* Background gradient - z-0 pour rester derrière le contenu et le footer au scroll */}
         <div className="fixed inset-0 z-0 bg-gradient-to-b from-navy-950 via-navy-900 to-navy-950 pointer-events-none" />
 
         <div className="container mx-auto px-6 md:px-12 lg:px-20 relative z-10">
-          {/* Back link */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -193,9 +217,8 @@ export default function CommunicationPageClient() {
             </Link>
           </motion.div>
 
-          {/* Page title */}
           <motion.div
-            className="mb-16"
+            className="mb-12"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -211,8 +234,7 @@ export default function CommunicationPageClient() {
             </p>
           </motion.div>
 
-          {/* Video grid */}
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
             {loading ? (
               <div className="text-primary-300 text-sm">{t.loading}</div>
             ) : videos.length === 0 ? (
@@ -223,10 +245,8 @@ export default function CommunicationPageClient() {
                   key={video.id}
                   video={video}
                   index={index}
-                  watchText={t.watchVideo}
-                  shareText={t.share}
+                  t={t}
                   onOpen={() => setActive(video)}
-                  onShare={() => shareVideo(video)}
                 />
               ))
             )}
@@ -242,11 +262,18 @@ export default function CommunicationPageClient() {
             {loading ? (
               <div className="text-primary-300 text-sm">{t.loading}</div>
             ) : articles.length === 0 ? (
-              <div className="text-primary-300 text-sm">{t.emptyArticles}</div>
+              <div className="text-primary-300 text-sm">
+                {t.emptyArticles}
+              </div>
             ) : (
-              <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
                 {articles.map((article, index) => (
-                  <ArticleCard key={article.id} article={article} index={index} />
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    index={index}
+                    t={t}
+                  />
                 ))}
               </div>
             )}
@@ -254,52 +281,139 @@ export default function CommunicationPageClient() {
         </div>
       </main>
 
-      {active ? (
-        <VideoModal
-          video={active}
-          shareText={t.share}
-          onClose={() => setActive(null)}
-          onShare={() => shareVideo(active)}
-        />
-      ) : null}
+      {active && (
+        <VideoModal video={active} t={t} onClose={() => setActive(null)} />
+      )}
       <Footer />
     </>
   );
 }
 
-interface Video {
-  id: string;
-  thumbnail: string;
+/* ------------------------------------------------------------------ */
+
+function SharePopover({
+  url,
+  title,
+  t,
+  onClose,
+}: {
+  url: string;
   title: string;
-  description: string;
-  videoUrl: string;
+  t: Translations;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [onClose]);
+
+  const encoded = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
+
+  const socials = [
+    {
+      name: "WhatsApp",
+      href: `https://wa.me/?text=${encodedTitle}%20${encoded}`,
+      color: "text-[#25D366]",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+      ),
+    },
+    {
+      name: "X",
+      href: `https://twitter.com/intent/tweet?url=${encoded}&text=${encodedTitle}`,
+      color: "text-white",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      ),
+    },
+    {
+      name: "Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`,
+      color: "text-[#1877F2]",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+        </svg>
+      ),
+    },
+    {
+      name: "LinkedIn",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`,
+      color: "text-[#0A66C2]",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+        </svg>
+      ),
+    },
+  ];
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success(t.linkCopied);
+      onClose();
+    });
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+      transition={{ duration: 0.15 }}
+      className="absolute bottom-full mb-2 right-0 z-50 w-52 bg-navy-900 border border-gold-500/20 rounded-xl shadow-2xl py-2 overflow-hidden"
+    >
+      {socials.map((s) => (
+        <a
+          key={s.name}
+          href={s.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-2.5 hover:bg-navy-800 transition-colors"
+          onClick={onClose}
+        >
+          <span className={s.color}>{s.icon}</span>
+          <span className="text-sm text-primary-200">{s.name}</span>
+        </a>
+      ))}
+      <div className="border-t border-gold-500/10 mt-1 pt-1">
+        <button
+          type="button"
+          onClick={copyLink}
+          className="flex items-center gap-3 px-4 py-2.5 hover:bg-navy-800 transition-colors w-full text-left"
+        >
+          <svg
+            className="w-5 h-5 text-primary-400"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+            />
+          </svg>
+          <span className="text-sm text-primary-200">{t.copyLink}</span>
+        </button>
+      </div>
+    </motion.div>
+  );
 }
 
-interface VideoDbRow {
-  id: string;
-  title: string;
-  description: string | null;
-  title_en: string | null;
-  description_en: string | null;
-  video_path: string;
-  thumbnail_path: string;
-}
-
-interface ArticleDbRow {
-  id: string;
-  title: string;
-  content: string;
-  title_en: string | null;
-  content_en: string | null;
-  image_path: string;
-}
-
-interface Article {
-  id: string;
-  title: string;
-  content: string;
-  image: string;
-}
+/* ------------------------------------------------------------------ */
 
 function ShareIcon({ className }: { className?: string }) {
   return (
@@ -319,32 +433,32 @@ function ShareIcon({ className }: { className?: string }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+
 function VideoCard({
   video,
   index,
-  watchText,
-  shareText,
+  t,
   onOpen,
-  onShare,
 }: {
   video: Video;
   index: number;
-  watchText: string;
-  shareText: string;
+  t: Translations;
   onOpen: () => void;
-  onShare: () => void;
 }) {
+  const [showShare, setShowShare] = useState(false);
+
   return (
     <motion.article
       className="group"
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
+      transition={{ duration: 0.5, delay: 0.1 + index * 0.05 }}
     >
       <button
         type="button"
         onClick={onOpen}
-        className="relative aspect-video mb-6 overflow-hidden rounded-lg bg-navy-800 w-full text-left"
+        className="relative aspect-video mb-3 overflow-hidden rounded-xl bg-navy-800 w-full text-left"
       >
         <img
           src={video.thumbnail}
@@ -352,67 +466,77 @@ function VideoCard({
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <motion.div
-            className="w-16 h-16 rounded-full bg-gold-500 flex items-center justify-center"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
+          <div className="w-12 h-12 rounded-full bg-gold-500/90 flex items-center justify-center">
             <svg
-              className="w-6 h-6 text-navy-950 ml-1"
+              className="w-5 h-5 text-navy-950 ml-0.5"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
               <path d="M8 5v14l11-7z" />
             </svg>
-          </motion.div>
+          </div>
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-950/60 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950/50 to-transparent pointer-events-none" />
       </button>
 
-      <div className="space-y-3">
-        <h3 className="text-xl md:text-2xl font-serif text-primary-100 group-hover:text-gold-400 transition-colors duration-300">
-          {video.title}
-        </h3>
-        <p className="text-primary-400 leading-relaxed">{video.description}</p>
-        <div className="flex items-center gap-4 mt-2">
-          <motion.button
-            className="inline-flex items-center gap-2 text-gold-500 text-sm font-medium tracking-wider uppercase"
-            whileHover={{ x: 5 }}
-            onClick={onOpen}
-          >
-            {watchText}
-            <span>→</span>
-          </motion.button>
+      <h3 className="text-sm md:text-base font-medium text-primary-100 leading-snug line-clamp-2 mb-1 group-hover:text-gold-400 transition-colors">
+        {video.title}
+      </h3>
+      <p className="text-xs md:text-sm text-primary-400 line-clamp-2 mb-2">
+        {video.description}
+      </p>
+
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="text-gold-500 text-xs font-medium tracking-wider uppercase hover:text-gold-400 transition-colors"
+        >
+          {t.watchVideo} →
+        </button>
+        <div className="relative">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onShare();
+              setShowShare(!showShare);
             }}
-            className="inline-flex items-center gap-1.5 text-primary-400 hover:text-gold-400 text-sm transition-colors"
+            className="inline-flex items-center gap-1 text-primary-400 hover:text-gold-400 text-xs transition-colors"
           >
-            <ShareIcon className="w-4 h-4" />
-            {shareText}
+            <ShareIcon className="w-3.5 h-3.5" />
+            {t.share}
           </button>
+          <AnimatePresence>
+            {showShare && (
+              <SharePopover
+                url={getShareUrl("video", video.id)}
+                title={video.title}
+                t={t}
+                onClose={() => setShowShare(false)}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </motion.article>
   );
 }
 
+/* ------------------------------------------------------------------ */
+
 function VideoModal({
   video,
-  shareText,
+  t,
   onClose,
-  onShare,
 }: {
   video: Video;
-  shareText: string;
+  t: Translations;
   onClose: () => void;
-  onShare: () => void;
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [ratio, setRatio] = useState<number | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -422,6 +546,34 @@ function VideoModal({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+
+    const attemptPlay = async () => {
+      try {
+        el.muted = false;
+        await el.play();
+        setIsMuted(false);
+      } catch {
+        el.muted = true;
+        setIsMuted(true);
+        try {
+          await el.play();
+        } catch {
+          /* user will use controls */
+        }
+      }
+    };
+
+    if (el.readyState >= 3) {
+      attemptPlay();
+    } else {
+      el.addEventListener("canplay", attemptPlay, { once: true });
+      return () => el.removeEventListener("canplay", attemptPlay);
+    }
+  }, []);
 
   const handleMetadata = () => {
     const el = videoRef.current;
@@ -434,7 +586,7 @@ function VideoModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 md:p-6"
       role="dialog"
       aria-modal="true"
       onMouseDown={(e) => {
@@ -442,52 +594,118 @@ function VideoModal({
       }}
     >
       <div
-        className="w-full rounded-2xl overflow-hidden border border-gold-500/10 bg-navy-950/95 transition-[max-width] duration-300"
-        style={{ maxWidth: isPortrait ? `min(24rem, calc(75vh * ${ratio}))` : "64rem" }}
+        className="w-full rounded-2xl overflow-visible border border-gold-500/10 bg-navy-950/95 transition-[max-width] duration-300"
+        style={{
+          maxWidth: isPortrait
+            ? `min(24rem, calc(75vh * ${ratio}))`
+            : "64rem",
+        }}
       >
-        <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-gold-500/10">
+        <div className="flex items-center justify-between gap-4 px-4 py-3 border-b border-gold-500/10">
           <div className="min-w-0">
-            <div className="text-primary-100 font-medium truncate">{video.title}</div>
-            {video.description ? (
-              <div className="text-primary-400 text-sm truncate">{video.description}</div>
-            ) : null}
+            <div className="text-primary-100 font-medium truncate text-sm md:text-base">
+              {video.title}
+            </div>
+            {video.description && (
+              <div className="text-primary-400 text-xs md:text-sm truncate">
+                {video.description}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <button
-              type="button"
-              onClick={onShare}
-              className="inline-flex items-center gap-1.5 text-primary-400 hover:text-gold-400 text-sm transition-colors"
-            >
-              <ShareIcon className="w-4 h-4" />
-              {shareText}
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowShare(!showShare)}
+                className="inline-flex items-center gap-1.5 text-primary-400 hover:text-gold-400 text-sm transition-colors"
+              >
+                <ShareIcon className="w-4 h-4" />
+                {t.share}
+              </button>
+              <AnimatePresence>
+                {showShare && (
+                  <SharePopover
+                    url={getShareUrl("video", video.id)}
+                    title={video.title}
+                    t={t}
+                    onClose={() => setShowShare(false)}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
             <button
               type="button"
               onClick={onClose}
               className="text-primary-400 hover:text-gold-300 transition-colors"
             >
-              Fermer
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </button>
           </div>
         </div>
 
         <div
-          className="bg-black relative"
+          className="bg-black relative overflow-hidden rounded-b-2xl"
           style={{ aspectRatio: ratio ? `${ratio}` : "16/9" }}
         >
-          {isLoading ? (
-            <div className="absolute inset-0 flex items-center justify-center">
+          {isLoading && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
               <span className="inline-flex w-10 h-10 rounded-full border-2 border-gold-400/30 border-t-gold-400 animate-spin" />
             </div>
-          ) : null}
+          )}
+
+          {isMuted && (
+            <button
+              type="button"
+              onClick={() => {
+                if (videoRef.current) {
+                  videoRef.current.muted = false;
+                  setIsMuted(false);
+                }
+              }}
+              className="absolute bottom-16 left-4 z-20 flex items-center gap-2 bg-black/80 hover:bg-black text-white px-3 py-2 rounded-lg text-xs md:text-sm transition-colors"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+                />
+              </svg>
+              {t.tapToUnmute}
+            </button>
+          )}
+
           <video
             ref={videoRef}
             src={video.videoUrl}
             controls
             playsInline
+            preload="auto"
             className="w-full h-full object-contain"
             poster={video.thumbnail}
-            preload="metadata"
             onLoadedMetadata={handleMetadata}
             onLoadStart={() => setIsLoading(true)}
             onWaiting={() => setIsLoading(true)}
@@ -501,33 +719,63 @@ function VideoModal({
   );
 }
 
-function ArticleCard({ article, index }: { article: Article; index: number }) {
+/* ------------------------------------------------------------------ */
+
+function ArticleCard({
+  article,
+  index,
+  t,
+}: {
+  article: Article;
+  index: number;
+  t: Translations;
+}) {
+  const [showShare, setShowShare] = useState(false);
+
   return (
     <motion.article
       className="group"
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 + index * 0.1 }}
+      transition={{ duration: 0.5, delay: 0.1 + index * 0.05 }}
     >
-      <div className="relative aspect-video mb-6 overflow-hidden rounded-lg bg-navy-800 w-full">
+      <div className="relative aspect-video mb-3 overflow-hidden rounded-xl bg-navy-800 w-full">
         <img
           src={article.image}
           alt={article.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-950/70 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-950/60 to-transparent pointer-events-none" />
       </div>
 
-      <div className="space-y-3">
-        <h3 className="text-xl md:text-2xl font-serif text-primary-100 group-hover:text-gold-400 transition-colors duration-300">
-          {article.title}
-        </h3>
-        <p className="text-primary-400 leading-relaxed whitespace-pre-line">
-          {article.content}
-        </p>
+      <h3 className="text-sm md:text-base font-medium text-primary-100 leading-snug line-clamp-2 mb-1 group-hover:text-gold-400 transition-colors">
+        {article.title}
+      </h3>
+      <p className="text-xs md:text-sm text-primary-400 line-clamp-3 mb-2 whitespace-pre-line">
+        {article.content}
+      </p>
+
+      <div className="relative inline-block">
+        <button
+          type="button"
+          onClick={() => setShowShare(!showShare)}
+          className="inline-flex items-center gap-1 text-primary-400 hover:text-gold-400 text-xs transition-colors"
+        >
+          <ShareIcon className="w-3.5 h-3.5" />
+          {t.share}
+        </button>
+        <AnimatePresence>
+          {showShare && (
+            <SharePopover
+              url={getShareUrl("article", article.id)}
+              title={article.title}
+              t={t}
+              onClose={() => setShowShare(false)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </motion.article>
   );
 }
-
