@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://frank-melloul-website.onrender.com";
+  const baseUrl = "https://melloulandpartners.com";
   const now = new Date();
 
   return [
