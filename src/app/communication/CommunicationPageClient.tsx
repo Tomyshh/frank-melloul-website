@@ -372,7 +372,7 @@ function SharePopover({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 8, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className="absolute bottom-full mb-2 right-0 z-50 w-52 bg-navy-900 border border-gold-500/20 rounded-xl shadow-2xl py-2 overflow-hidden"
+      className="absolute top-full mt-2 right-0 z-50 w-52 bg-navy-900 border border-gold-500/20 rounded-xl shadow-2xl py-2 overflow-hidden"
     >
       {socials.map((s) => (
         <a
