@@ -12,7 +12,9 @@ export const translations = {
     },
     // Hero
     hero: {
+      founderName: "Frank Melloul",
       companyName: "MELLOUL & Partners",
+      globalAdvisory: "Global Advisory",
       title: "Empowers leaders to shape agendas, unlock opportunities, and create lasting impact.",
       discover: "Discover",
       // Words to highlight in gold
@@ -144,7 +146,9 @@ export const translations = {
     },
     // Hero
     hero: {
+      founderName: "Frank Melloul",
       companyName: "MELLOUL & Partners",
+      globalAdvisory: "Conseil mondial",
       title: "Accompagne les leaders pour façonner les agendas, débloquer les opportunités et créer un impact durable.",
       discover: "Découvrir",
       // Words to highlight in gold

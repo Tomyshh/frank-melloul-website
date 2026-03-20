@@ -73,14 +73,17 @@ function HeroSection() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.1 }}
           >
-            <div className="flex items-center gap-3">
-              <span className="text-gold-400 font-sans text-2xl md:text-3xl lg:text-4xl tracking-[0.15em] font-medium">
+            <h1 className="flex flex-col items-center gap-2 text-center font-sans font-medium">
+              <span className="text-primary-200 text-lg md:text-xl lg:text-2xl tracking-[0.2em] uppercase">
+                {t.hero.founderName}
+              </span>
+              <span className="text-gold-400 text-2xl md:text-3xl lg:text-4xl tracking-[0.15em]">
                 {t.hero.companyName}
               </span>
-            </div>
-            <span className="text-primary-300 text-xs md:text-sm tracking-[0.35em] uppercase">
-              Global Advisory
-            </span>
+              <span className="text-primary-300 text-xs md:text-sm tracking-[0.35em] uppercase font-normal">
+                {t.hero.globalAdvisory}
+              </span>
+            </h1>
           </motion.div>
 
           {/* Tagline - Strategy for Influence and Diplomacy */}

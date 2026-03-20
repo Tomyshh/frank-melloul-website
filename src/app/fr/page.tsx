@@ -9,9 +9,9 @@ import BiographySection from "@/components/sections/BiographySection";
 import ContactSection from "@/components/sections/ContactSection";
 
 export const metadata: Metadata = {
-  title: "Melloul & Partners | Conseil stratégique international",
+  title: "Frank Melloul | Melloul & Partners — Conseil stratégique international",
   description:
-    "Cabinet de conseil stratégique international. Nous accompagnons les leaders pour façonner les agendas, débloquer les opportunités et créer un impact durable.",
+    "Frank Melloul est le fondateur de Melloul & Partners, cabinet de conseil stratégique international. Influence, diplomatie et accompagnement des dirigeants.",
   alternates: {
     canonical: "/fr",
     languages: {
@@ -20,9 +20,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Melloul & Partners | Conseil stratégique international",
+    title: "Frank Melloul | Melloul & Partners — Conseil stratégique international",
     description:
-      "Cabinet de conseil stratégique international. Stratégies d’influence et diplomatie.",
+      "Frank Melloul dirige Melloul & Partners : conseil stratégique, influence et diplomatie pour les décideurs.",
     url: "/fr",
     locale: "fr_FR",
     type: "website",

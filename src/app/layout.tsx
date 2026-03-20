@@ -20,17 +20,18 @@ const LoadingScreen = dynamic(
 export const metadata: Metadata = {
   title: {
     default:
-      "Melloul & Partners | Global Advisory - Strategies for Influence and Diplomacy",
-    template: "%s | Melloul & Partners",
+      "Frank Melloul | Melloul & Partners — Global Advisory & Strategic Influence",
+    template: "%s | Frank Melloul — Melloul & Partners",
   },
   description:
-    "Global strategic advisory firm. We empower leaders to shape agendas, unlock opportunities, and create lasting impact.",
+    "Frank Melloul is the founder of Melloul & Partners, a global strategic advisory firm. Strategies for influence, diplomacy, and executive counsel for leaders worldwide.",
   keywords: [
+    "Frank Melloul",
+    "Frank Melloul advisor",
+    "Melloul & Partners",
     "strategic advisory",
     "diplomacy",
     "influence",
-    "Frank Melloul",
-    "Melloul & Partners",
     "consulting",
     "international affairs",
   ],
@@ -59,9 +60,9 @@ export const metadata: Metadata = {
     shortcut: "/only_gold_logo.png",
   },
   openGraph: {
-    title: "Melloul & Partners | Global Advisory",
+    title: "Frank Melloul | Melloul & Partners — Global Advisory",
     description:
-      "Global strategic advisory firm. Strategies for Influence and Diplomacy.",
+      "Frank Melloul leads Melloul & Partners: global strategic advisory, influence, and diplomacy for decision-makers.",
     type: "website",
     locale: "en_US",
     url: "/",
@@ -77,8 +78,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Melloul & Partners | Global Advisory",
-    description: "Global strategic advisory firm. Strategies for Influence and Diplomacy.",
+    title: "Frank Melloul | Melloul & Partners — Global Advisory",
+    description:
+      "Frank Melloul leads Melloul & Partners: strategic advisory, influence, and diplomacy.",
     images: ["/only_gold_logo.png"],
   },
 };
@@ -88,16 +90,26 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const origin = "https://melloulandpartners.com";
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
-        "@type": "Organization",
+        "@type": "WebSite",
+        "@id": `${origin}/#website`,
+        url: `${origin}/`,
         name: "Melloul & Partners",
-        url: "https://melloulandpartners.com/",
-        logo: "https://melloulandpartners.com/only_gold_logo.png",
+        inLanguage: ["en", "fr"],
+        publisher: { "@id": `${origin}/#organization` },
+      },
+      {
+        "@type": "Organization",
+        "@id": `${origin}/#organization`,
+        name: "Melloul & Partners",
+        url: `${origin}/`,
+        logo: `${origin}/only_gold_logo.png`,
         email: "contact@melloulandpartners.com",
-        address: "Paris, Dubai",
+        founder: { "@id": `${origin}/#frank-melloul` },
         sameAs: [
           "https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true",
           "https://x.com/frankmelloul",
@@ -107,14 +119,24 @@ export default function RootLayout({
       },
       {
         "@type": "Person",
+        "@id": `${origin}/#frank-melloul`,
         name: "Frank Melloul",
-        url: "https://melloulandpartners.com/",
-        worksFor: { "@type": "Organization", name: "Melloul & Partners" },
+        givenName: "Frank",
+        familyName: "Melloul",
+        url: `${origin}/`,
+        jobTitle: "Founder",
+        worksFor: { "@id": `${origin}/#organization` },
+        knowsAbout: [
+          "strategic advisory",
+          "international affairs",
+          "public affairs",
+          "diplomacy",
+        ],
         sameAs: [
-          "https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true",
           "https://x.com/frankmelloul",
           "https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx",
           "https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr",
+          "https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true",
         ],
       },
     ],
