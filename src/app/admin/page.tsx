@@ -13,6 +13,7 @@ type VideoRow = {
   description_en?: string | null;
   video_path: string;
   thumbnail_path: string;
+  external_url?: string | null;
   is_published: boolean;
   sort_order: number;
   created_at: string;
@@ -389,37 +390,60 @@ function VideosDashboard() {
             {videos.map((v) => (
               <li key={v.id} className="p-5 flex flex-col md:flex-row gap-4">
                 <div className="w-full md:w-56">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewing(v)}
-                    className="w-full aspect-video rounded-lg overflow-hidden bg-navy-900/50 border border-gold-500/10 relative group"
-                    aria-label={`Voir: ${v.title}`}
-                  >
-                    <img
-                      src={getPublicUrl(client, v.thumbnail_path)}
-                      alt={v.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="w-12 h-12 rounded-full bg-gold-500 flex items-center justify-center">
-                        <svg
-                          className="w-5 h-5 text-navy-950 ml-0.5"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
+                  {v.external_url ? (
+                    <a
+                      href={v.external_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full aspect-video rounded-lg overflow-hidden bg-navy-900/50 border border-gold-500/10 relative group block"
+                    >
+                      <img
+                        src={getPublicUrl(client, v.thumbnail_path)}
+                        alt={v.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewing(v)}
+                      className="w-full aspect-video rounded-lg overflow-hidden bg-navy-900/50 border border-gold-500/10 relative group"
+                      aria-label={`Voir: ${v.title}`}
+                    >
+                      <img
+                        src={getPublicUrl(client, v.thumbnail_path)}
+                        alt={v.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-12 h-12 rounded-full bg-gold-500 flex items-center justify-center">
+                          <svg
+                            className="w-5 h-5 text-navy-950 ml-0.5"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="text-primary-100 font-medium truncate">
                           {v.title}
                         </h3>
@@ -433,7 +457,22 @@ function VideosDashboard() {
                         >
                           {v.is_published ? "Publié" : "Brouillon"}
                         </span>
+                        {v.external_url && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full border border-blue-500/20 text-blue-300 bg-blue-500/10">
+                            Lien externe
+                          </span>
+                        )}
                       </div>
+                      {v.external_url && (
+                        <a
+                          href={v.external_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 text-xs mt-1 block truncate underline"
+                        >
+                          {v.external_url}
+                        </a>
+                      )}
                       {v.description ? (
                         <p className="text-primary-400 text-sm mt-2 line-clamp-2">
                           {v.description}
@@ -445,13 +484,24 @@ function VideosDashboard() {
                     </div>
 
                     <div className="flex items-center gap-2 flex-wrap">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewing(v)}
-                        className="rounded-lg border border-gold-500/15 bg-navy-950/30 text-primary-200 px-3 py-2 text-sm hover:border-gold-500/30 hover:text-gold-200 transition-colors"
-                      >
-                        Voir
-                      </button>
+                      {v.external_url ? (
+                        <a
+                          href={v.external_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-200 px-3 py-2 text-sm hover:bg-blue-500/15 transition-colors"
+                        >
+                          Voir le lien
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewing(v)}
+                          className="rounded-lg border border-gold-500/15 bg-navy-950/30 text-primary-200 px-3 py-2 text-sm hover:border-gold-500/30 hover:text-gold-200 transition-colors"
+                        >
+                          Voir
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => shareVideo(v.id)}
@@ -620,20 +670,69 @@ function VideoForm({
   const [descriptionEn, setDescriptionEn] = useState(initial?.description_en ?? "");
   const [isPublished, setIsPublished] = useState(initial?.is_published ?? true);
   const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 0);
+  const [externalUrl, setExternalUrl] = useState(initial?.external_url ?? "");
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
+  const [ogPreviewUrl, setOgPreviewUrl] = useState<string | null>(null);
+  const [fetchingOg, setFetchingOg] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savingStep, setSavingStep] = useState<
     "idle" | "thumbnail" | "video" | "db"
   >("idle");
 
   const isCreate = mode === "create";
+  const isExternalLink = Boolean(externalUrl.trim());
+
+  const fetchOgImage = async () => {
+    if (!externalUrl.trim()) {
+      toast.error("Entrez d'abord un lien externe.");
+      return;
+    }
+    setFetchingOg(true);
+    try {
+      const res = await fetch(
+        `/api/fetch-og-image?url=${encodeURIComponent(externalUrl.trim())}`
+      );
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error ?? `Erreur ${res.status}`);
+      }
+      const blob = await res.blob();
+      const ext = blob.type.includes("png")
+        ? "png"
+        : blob.type.includes("gif")
+          ? "gif"
+          : blob.type.includes("webp")
+            ? "webp"
+            : "jpg";
+      const file = new File([blob], `og-image.${ext}`, {
+        type: blob.type || "image/jpeg",
+      });
+      if (ogPreviewUrl) URL.revokeObjectURL(ogPreviewUrl);
+      const preview = URL.createObjectURL(blob);
+      setThumbFile(file);
+      setOgPreviewUrl(preview);
+      toast.success("Image récupérée !");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Impossible de récupérer l'image"
+      );
+    } finally {
+      setFetchingOg(false);
+    }
+  };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isCreate && (!videoFile || !thumbFile)) {
+    if (isCreate && !isExternalLink && (!videoFile || !thumbFile)) {
       toast.error("Vidéo et photo sont requis pour créer.");
+      return;
+    }
+    if (isCreate && isExternalLink && !thumbFile) {
+      toast.error(
+        "Cliquez sur « Récupérer l'image » pour obtenir la miniature du lien."
+      );
       return;
     }
 
@@ -687,6 +786,7 @@ function VideoForm({
         description_en: descriptionEn || null,
         video_path: nextVideoPath,
         thumbnail_path: nextThumbPath,
+        external_url: externalUrl.trim() || null,
         is_published: isPublished,
         sort_order: sortOrder,
       };
@@ -841,29 +941,81 @@ function VideoForm({
           </label>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-xs tracking-wider text-primary-400 uppercase">
-            Photo {isCreate ? "(requis)" : "(optionnel)"}
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setThumbFile(e.target.files?.[0] ?? null)}
-            className="w-full text-primary-200 text-sm file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gold-500/10 file:text-gold-200 hover:file:bg-gold-500/15"
-          />
+        {/* Lien externe */}
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-blue-400 uppercase font-medium">
+            Lien externe (optionnel)
+          </div>
+          <p className="text-primary-500 text-xs">
+            Si renseigné, les visiteurs seront redirigés vers ce site au clic.
+            Aucun fichier vidéo requis — seule la miniature est nécessaire.
+          </p>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              URL du site externe
+            </label>
+            <div className="flex gap-2">
+              <input
+                value={externalUrl}
+                onChange={(e) => setExternalUrl(e.target.value)}
+                type="url"
+                placeholder="https://youtube.com/watch?v=..."
+                className="flex-1 rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              />
+              <button
+                type="button"
+                onClick={fetchOgImage}
+                disabled={fetchingOg || !externalUrl.trim()}
+                className="rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-200 px-3 py-2 text-sm hover:bg-blue-500/15 transition-colors disabled:opacity-50 whitespace-nowrap"
+              >
+                {fetchingOg ? "Récupération…" : "Récupérer l'image"}
+              </button>
+            </div>
+          </div>
+          {ogPreviewUrl && (
+            <div className="space-y-1">
+              <div className="text-xs text-primary-500">Aperçu de la miniature récupérée :</div>
+              <img
+                src={ogPreviewUrl}
+                alt="Aperçu OG"
+                className="w-48 rounded-lg border border-gold-500/10 object-cover"
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
           <label className="block text-xs tracking-wider text-primary-400 uppercase">
-            Vidéo {isCreate ? "(requis)" : "(optionnel)"}
+            Photo {isCreate ? (isExternalLink ? "(récupérée via le lien)" : "(requis)") : "(optionnel)"}
           </label>
           <input
             type="file"
-            accept="video/*"
-            onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              setThumbFile(file);
+              if (file) {
+                if (ogPreviewUrl) URL.revokeObjectURL(ogPreviewUrl);
+                setOgPreviewUrl(URL.createObjectURL(file));
+              }
+            }}
             className="w-full text-primary-200 text-sm file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gold-500/10 file:text-gold-200 hover:file:bg-gold-500/15"
           />
         </div>
+
+        {!isExternalLink && (
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Vidéo {isCreate ? "(requis)" : "(optionnel)"}
+            </label>
+            <input
+              type="file"
+              accept="video/*"
+              onChange={(e) => setVideoFile(e.target.files?.[0] ?? null)}
+              className="w-full text-primary-200 text-sm file:mr-4 file:py-2 file:px-3 file:rounded-md file:border-0 file:bg-gold-500/10 file:text-gold-200 hover:file:bg-gold-500/15"
+            />
+          </div>
+        )}
 
         <div className="md:col-span-2 flex items-center justify-end gap-2 pt-2">
           <button

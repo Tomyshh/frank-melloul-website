@@ -60,6 +60,7 @@ interface Video {
   title: string;
   description: string;
   videoUrl: string;
+  externalUrl: string | null;
 }
 
 interface VideoDbRow {
@@ -70,6 +71,7 @@ interface VideoDbRow {
   description_en: string | null;
   video_path: string;
   thumbnail_path: string;
+  external_url: string | null;
 }
 
 interface ArticleDbRow {
@@ -127,7 +129,7 @@ export default function CommunicationPageClient() {
         client!
           .from("videos")
           .select(
-            "id,title,description,title_en,description_en,video_path,thumbnail_path,is_published,sort_order,created_at"
+            "id,title,description,title_en,description_en,video_path,thumbnail_path,external_url,is_published,sort_order,created_at"
           )
           .eq("is_published", true)
           .order("sort_order", { ascending: false })
@@ -172,6 +174,7 @@ export default function CommunicationPageClient() {
             ? (row.description_en ?? row.description)
             : row.description) ?? "",
         videoUrl: getPublicUrl(row.video_path),
+        externalUrl: row.external_url ?? null,
       }));
       const mappedArticles = articleRows.map((row) => ({
         id: row.id,
@@ -190,7 +193,11 @@ export default function CommunicationPageClient() {
         const target = mapped.find((v) => v.id === videoParam);
         if (target) {
           deepLinkHandled.current = true;
-          setActive(target);
+          if (target.externalUrl) {
+            window.open(target.externalUrl, "_blank", "noopener,noreferrer");
+          } else {
+            setActive(target);
+          }
         }
       }
     })();
@@ -452,6 +459,15 @@ function VideoCard({
   onOpen: () => void;
 }) {
   const [showShare, setShowShare] = useState(false);
+  const isExternal = Boolean(video.externalUrl);
+
+  const handleClick = () => {
+    if (isExternal) {
+      window.open(video.externalUrl!, "_blank", "noopener,noreferrer");
+    } else {
+      onOpen();
+    }
+  };
 
   return (
     <motion.article
@@ -462,7 +478,7 @@ function VideoCard({
     >
       <button
         type="button"
-        onClick={onOpen}
+        onClick={handleClick}
         className="relative aspect-video mb-3 overflow-hidden rounded-xl bg-navy-800 w-full text-left"
       >
         <img
@@ -470,15 +486,54 @@ function VideoCard({
           alt={video.title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="w-12 h-12 rounded-full bg-gold-500/90 flex items-center justify-center">
+        {isExternal && (
+          <div className="absolute top-2 right-2 bg-black/60 rounded-md px-2 py-1 flex items-center gap-1">
             <svg
-              className="w-5 h-5 text-navy-950 ml-0.5"
-              fill="currentColor"
+              className="w-3 h-3 text-white"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
               viewBox="0 0 24 24"
             >
-              <path d="M8 5v14l11-7z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+              />
             </svg>
+            <span className="text-white text-[10px] font-medium">Lien</span>
+          </div>
+        )}
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div
+            className={[
+              "w-12 h-12 rounded-full flex items-center justify-center",
+              isExternal ? "bg-white/90" : "bg-gold-500/90",
+            ].join(" ")}
+          >
+            {isExternal ? (
+              <svg
+                className="w-5 h-5 text-navy-950"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-5 h-5 text-navy-950 ml-0.5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
           </div>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-navy-950/50 to-transparent pointer-events-none" />
@@ -487,17 +542,19 @@ function VideoCard({
       <h3 className="text-sm md:text-base font-medium text-primary-100 leading-snug line-clamp-2 mb-1 group-hover:text-gold-400 transition-colors">
         {video.title}
       </h3>
-      <p className="text-xs md:text-sm text-primary-400 line-clamp-2 mb-2">
-        {video.description}
-      </p>
+      {video.description && (
+        <p className="text-xs md:text-sm text-primary-400 line-clamp-2 mb-2">
+          {video.description}
+        </p>
+      )}
 
       <div className="flex items-center gap-3">
         <button
           type="button"
-          onClick={onOpen}
+          onClick={handleClick}
           className="text-gold-500 text-xs font-medium tracking-wider uppercase hover:text-gold-400 transition-colors"
         >
-          {t.watchVideo} →
+          {isExternal ? `${t.readArticle} →` : `${t.watchVideo} →`}
         </button>
         <div className="relative">
           <button
@@ -514,7 +571,7 @@ function VideoCard({
           <AnimatePresence>
             {showShare && (
               <SharePopover
-                url={getShareUrl("video", video.id)}
+                url={isExternal ? video.externalUrl! : getShareUrl("video", video.id)}
                 title={video.title}
                 t={t}
                 onClose={() => setShowShare(false)}
