@@ -96,6 +96,36 @@ export async function generateMetadata({
   };
 }
 
+const defaultSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/communication#webpage`,
+      url: `${SITE_URL}/communication`,
+      name: DEFAULT_TITLE,
+      description: DEFAULT_DESC,
+      inLanguage: "en",
+      isPartOf: { "@id": `${SITE_URL}/#website` },
+    },
+    {
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+        { "@type": "ListItem", position: 2, name: "Communication", item: `${SITE_URL}/communication` },
+      ],
+    },
+  ],
+};
+
 export default function CommunicationPage() {
-  return <CommunicationPageClient />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(defaultSchema) }}
+      />
+      <CommunicationPageClient />
+    </>
+  );
 }

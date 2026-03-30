@@ -12,6 +12,18 @@ export const metadata: Metadata = {
   title: "Frank Melloul | Melloul & Partners — Conseil stratégique international",
   description:
     "Frank Melloul est le fondateur de Melloul & Partners, cabinet de conseil stratégique international. Influence, diplomatie et accompagnement des dirigeants.",
+  keywords: [
+    "Frank Melloul",
+    "Frank Melloul conseiller",
+    "Melloul & Partners",
+    "conseil stratégique",
+    "diplomatie",
+    "influence",
+    "affaires publiques",
+    "consulting international",
+    "géopolitique",
+    "conseil en influence",
+  ],
   alternates: {
     canonical: "/fr",
     languages: {
@@ -23,15 +35,40 @@ export const metadata: Metadata = {
     title: "Frank Melloul | Melloul & Partners — Conseil stratégique international",
     description:
       "Frank Melloul dirige Melloul & Partners : conseil stratégique, influence et diplomatie pour les décideurs.",
-    url: "/fr",
+    url: "https://melloulandpartners.com/fr",
     locale: "fr_FR",
     type: "website",
+    siteName: "Melloul & Partners",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Frank Melloul | Melloul & Partners — Conseil stratégique",
+    description:
+      "Frank Melloul dirige Melloul & Partners : conseil stratégique, influence et diplomatie pour les décideurs.",
+    creator: "@frankmelloul",
+  },
+};
+
+const frPageSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://melloulandpartners.com/fr#webpage",
+  url: "https://melloulandpartners.com/fr",
+  name: "Frank Melloul | Melloul & Partners — Conseil stratégique international",
+  description:
+    "Frank Melloul est le fondateur de Melloul & Partners, cabinet de conseil stratégique international. Influence, diplomatie et accompagnement des dirigeants.",
+  inLanguage: "fr",
+  isPartOf: { "@id": "https://melloulandpartners.com/#website" },
+  about: { "@id": "https://melloulandpartners.com/#frank-melloul" },
 };
 
 export default function HomeFr() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(frPageSchema) }}
+      />
       <Header />
       <main>
         <HeroSection />

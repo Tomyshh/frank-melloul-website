@@ -20,7 +20,7 @@ const LoadingScreen = dynamic(
 export const metadata: Metadata = {
   title: {
     default:
-      "Frank Melloul | Melloul & Partners — Global Advisory & Strategic Influence",
+      "Frank Melloul | Melloul & Partners — Global Advisory",
     template: "%s | Frank Melloul — Melloul & Partners",
   },
   description:
@@ -28,14 +28,24 @@ export const metadata: Metadata = {
   keywords: [
     "Frank Melloul",
     "Frank Melloul advisor",
+    "Frank Melloul consultant",
     "Melloul & Partners",
+    "Melloul and Partners",
     "strategic advisory",
+    "global advisory",
     "diplomacy",
     "influence",
+    "public affairs",
     "consulting",
     "international affairs",
+    "geopolitics",
+    "executive counsel",
+    "strategic influence",
+    "international consulting",
   ],
-  authors: [{ name: "Frank Melloul" }],
+  authors: [{ name: "Frank Melloul", url: "https://melloulandpartners.com" }],
+  creator: "Frank Melloul",
+  publisher: "Melloul & Partners",
   metadataBase: new URL("https://melloulandpartners.com"),
   alternates: { canonical: "/" },
   robots: {
@@ -65,23 +75,16 @@ export const metadata: Metadata = {
       "Frank Melloul leads Melloul & Partners: global strategic advisory, influence, and diplomacy for decision-makers.",
     type: "website",
     locale: "en_US",
-    url: "/",
+    url: "https://melloulandpartners.com",
     siteName: "Melloul & Partners",
-    images: [
-      {
-        url: "/only_gold_logo.png",
-        width: 1200,
-        height: 630,
-        alt: "Melloul & Partners Logo",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Frank Melloul | Melloul & Partners — Global Advisory",
     description:
       "Frank Melloul leads Melloul & Partners: strategic advisory, influence, and diplomacy.",
-    images: ["/only_gold_logo.png"],
+    creator: "@frankmelloul",
+    site: "@frankmelloul",
   },
 };
 
@@ -108,13 +111,15 @@ export default function RootLayout({
         name: "Melloul & Partners",
         url: `${origin}/`,
         logo: `${origin}/only_gold_logo.png`,
+        description:
+          "Global strategic advisory firm specializing in influence, diplomacy, and executive counsel for leaders worldwide.",
         email: "contact@melloulandpartners.com",
         founder: { "@id": `${origin}/#frank-melloul` },
         sameAs: [
-          "https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true",
+          "https://www.linkedin.com/company/melloul-partners-global-advisory/",
           "https://x.com/frankmelloul",
-          "https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx",
-          "https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr",
+          "https://www.instagram.com/frankmelloul/",
+          "https://www.facebook.com/share/1Gs4mWEmU3/",
         ],
       },
       {
@@ -124,6 +129,9 @@ export default function RootLayout({
         givenName: "Frank",
         familyName: "Melloul",
         url: `${origin}/`,
+        image: `${origin}/frank_melloul_avatar.jpeg`,
+        description:
+          "Founder of Melloul & Partners. Expert in strategic advisory, diplomacy, influence, and international affairs for global leaders.",
         jobTitle: "Founder",
         worksFor: { "@id": `${origin}/#organization` },
         knowsAbout: [
@@ -131,13 +139,24 @@ export default function RootLayout({
           "international affairs",
           "public affairs",
           "diplomacy",
+          "crisis management",
+          "strategic communications",
         ],
         sameAs: [
           "https://x.com/frankmelloul",
-          "https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx",
-          "https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr",
-          "https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true",
+          "https://www.instagram.com/frankmelloul/",
+          "https://www.facebook.com/share/1Gs4mWEmU3/",
+          "https://www.linkedin.com/company/melloul-partners-global-advisory/",
         ],
+      },
+      {
+        "@type": "ProfilePage",
+        "@id": `${origin}/#profilepage`,
+        url: `${origin}/`,
+        name: "Frank Melloul — Melloul & Partners",
+        inLanguage: ["en", "fr"],
+        isPartOf: { "@id": `${origin}/#website` },
+        mainEntity: { "@id": `${origin}/#frank-melloul` },
       },
     ],
   };

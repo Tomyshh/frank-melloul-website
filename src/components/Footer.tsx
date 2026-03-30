@@ -79,7 +79,7 @@ export default function Footer() {
           >
             {/* LinkedIn */}
             <Link
-              href="https://www.linkedin.com/company/melloul-partners-global-advisory/?viewAsMember=true"
+              href="https://www.linkedin.com/company/melloul-partners-global-advisory/"
               target="_blank"
               rel="noopener noreferrer"
               className="group"
@@ -102,7 +102,7 @@ export default function Footer() {
 
             {/* Facebook */}
             <Link
-              href="https://www.facebook.com/share/1Gs4mWEmU3/?mibextid=wwXIfr"
+              href="https://www.facebook.com/share/1Gs4mWEmU3/"
               target="_blank"
               rel="noopener noreferrer"
               className="group"
@@ -125,7 +125,7 @@ export default function Footer() {
 
             {/* Instagram */}
             <Link
-              href="https://www.instagram.com/frankmelloul?igsh=YTM5aDI3OXY5eGRx"
+              href="https://www.instagram.com/frankmelloul/"
               target="_blank"
               rel="noopener noreferrer"
               className="group"
@@ -167,6 +167,21 @@ export default function Footer() {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                 </svg>
               </motion.div>
+            </Link>
+          </motion.div>
+
+          {/* Privacy Policy */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.18 }}
+            viewport={{ once: true }}
+          >
+            <Link
+              href="/privacy"
+              className="text-primary-500 text-xs tracking-wide hover:text-primary-300 transition-colors duration-300"
+            >
+              Privacy Policy
             </Link>
           </motion.div>
 
