@@ -25,6 +25,7 @@ const pageTranslations = {
     linkCopied: "Link copied to clipboard!",
     copyLink: "Copy link",
     tapToUnmute: "Tap to unmute",
+    readArticle: "Read article",
   },
   fr: {
     title: "Communication",
@@ -40,6 +41,7 @@ const pageTranslations = {
     linkCopied: "Lien copié !",
     copyLink: "Copier le lien",
     tapToUnmute: "Activer le son",
+    readArticle: "Lire l'article",
   },
 } as const;
 
@@ -77,6 +79,7 @@ interface ArticleDbRow {
   title_en: string | null;
   content_en: string | null;
   image_path: string;
+  external_url: string | null;
 }
 
 interface Article {
@@ -84,6 +87,7 @@ interface Article {
   title: string;
   content: string;
   image: string;
+  externalUrl: string | null;
 }
 
 export default function CommunicationPageClient() {
@@ -131,7 +135,7 @@ export default function CommunicationPageClient() {
         client!
           .from("articles")
           .select(
-            "id,title,content,title_en,content_en,image_path,is_published,sort_order,created_at"
+            "id,title,content,title_en,content_en,image_path,external_url,is_published,sort_order,created_at"
           )
           .eq("is_published", true)
           .order("sort_order", { ascending: false })
@@ -176,6 +180,7 @@ export default function CommunicationPageClient() {
         content:
           (isEn ? (row.content_en ?? row.content) : row.content) ?? "",
         image: getPublicUrl(row.image_path),
+        externalUrl: row.external_url ?? null,
       }));
 
       setVideos(mapped);
@@ -731,6 +736,37 @@ function ArticleCard({
   t: Translations;
 }) {
   const [showShare, setShowShare] = useState(false);
+  const isExternal = Boolean(article.externalUrl);
+
+  const thumbnail = (
+    <div className="relative aspect-video mb-3 overflow-hidden rounded-xl bg-navy-800 w-full">
+      <img
+        src={article.image}
+        alt={article.title}
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        loading="lazy"
+      />
+      {isExternal && (
+        <div className="absolute top-2 right-2 bg-black/60 rounded-md px-2 py-1 flex items-center gap-1">
+          <svg
+            className="w-3 h-3 text-white"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+            />
+          </svg>
+          <span className="text-white text-[10px] font-medium">Lien</span>
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-navy-950/60 to-transparent pointer-events-none" />
+    </div>
+  );
 
   return (
     <motion.article
@@ -739,42 +775,63 @@ function ArticleCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1 + index * 0.05 }}
     >
-      <div className="relative aspect-video mb-3 overflow-hidden rounded-xl bg-navy-800 w-full">
-        <img
-          src={article.image}
-          alt={article.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-950/60 to-transparent pointer-events-none" />
-      </div>
+      {isExternal ? (
+        <a
+          href={article.externalUrl!}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block"
+        >
+          {thumbnail}
+        </a>
+      ) : (
+        thumbnail
+      )}
 
       <h3 className="text-sm md:text-base font-medium text-primary-100 leading-snug line-clamp-2 mb-1 group-hover:text-gold-400 transition-colors">
         {article.title}
       </h3>
-      <p className="text-xs md:text-sm text-primary-400 line-clamp-3 mb-2 whitespace-pre-line">
-        {article.content}
-      </p>
+      {article.content ? (
+        <p className="text-xs md:text-sm text-primary-400 line-clamp-3 mb-2 whitespace-pre-line">
+          {article.content}
+        </p>
+      ) : null}
 
-      <div className="relative inline-block">
-        <button
-          type="button"
-          onClick={() => setShowShare(!showShare)}
-          className="inline-flex items-center gap-1 text-primary-400 hover:text-gold-400 text-xs transition-colors"
-        >
-          <ShareIcon className="w-3.5 h-3.5" />
-          {t.share}
-        </button>
-        <AnimatePresence>
-          {showShare && (
-            <SharePopover
-              url={getShareUrl("article", article.id)}
-              title={article.title}
-              t={t}
-              onClose={() => setShowShare(false)}
-            />
-          )}
-        </AnimatePresence>
+      <div className="flex items-center gap-3">
+        {isExternal && (
+          <a
+            href={article.externalUrl!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold-500 text-xs font-medium tracking-wider uppercase hover:text-gold-400 transition-colors"
+          >
+            {t.readArticle} →
+          </a>
+        )}
+        <div className="relative inline-block">
+          <button
+            type="button"
+            onClick={() => setShowShare(!showShare)}
+            className="inline-flex items-center gap-1 text-primary-400 hover:text-gold-400 text-xs transition-colors"
+          >
+            <ShareIcon className="w-3.5 h-3.5" />
+            {t.share}
+          </button>
+          <AnimatePresence>
+            {showShare && (
+              <SharePopover
+                url={
+                  isExternal
+                    ? article.externalUrl!
+                    : getShareUrl("article", article.id)
+                }
+                title={article.title}
+                t={t}
+                onClose={() => setShowShare(false)}
+              />
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </motion.article>
   );
