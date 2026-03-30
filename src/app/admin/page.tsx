@@ -701,14 +701,8 @@ function VideoForm({
       // Read title & description from headers
       const rawTitle = res.headers.get("X-OG-Title");
       const rawDesc = res.headers.get("X-OG-Description");
-      if (rawTitle) {
-        const decoded = decodeURIComponent(rawTitle);
-        if (decoded && !title) setTitle(decoded);
-      }
-      if (rawDesc) {
-        const decoded = decodeURIComponent(rawDesc);
-        if (decoded && !description) setDescription(decoded);
-      }
+      const ogTitle = rawTitle ? decodeURIComponent(rawTitle) : "";
+      const ogDesc = rawDesc ? decodeURIComponent(rawDesc) : "";
 
       const blob = await res.blob();
       const ext = blob.type.includes("png")
@@ -725,7 +719,35 @@ function VideoForm({
       const preview = URL.createObjectURL(blob);
       setThumbFile(file);
       setOgPreviewUrl(preview);
-      toast.success("Image, titre et description récupérés !");
+
+      // Translate & inject into FR + EN fields
+      if (ogTitle || ogDesc) {
+        try {
+          const transRes = await fetch("/api/translate-og", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: ogTitle, description: ogDesc }),
+          });
+          if (transRes.ok) {
+            const t = await transRes.json();
+            if (t.titleFr) setTitle(t.titleFr);
+            if (t.titleEn) setTitleEn(t.titleEn);
+            if (t.descriptionFr) setDescription(t.descriptionFr);
+            if (t.descriptionEn) setDescriptionEn(t.descriptionEn);
+            toast.success("Image, titre et description récupérés et traduits !");
+          } else {
+            if (ogTitle) setTitle(ogTitle);
+            if (ogDesc) setDescription(ogDesc);
+            toast.success("Image récupérée (traduction indisponible).");
+          }
+        } catch {
+          if (ogTitle) setTitle(ogTitle);
+          if (ogDesc) setDescription(ogDesc);
+          toast.success("Image récupérée (traduction indisponible).");
+        }
+      } else {
+        toast.success("Image récupérée !");
+      }
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Impossible de récupérer l'image"
@@ -1305,14 +1327,8 @@ function ArticleForm({
       // Read title & description from headers
       const rawTitle = res.headers.get("X-OG-Title");
       const rawDesc = res.headers.get("X-OG-Description");
-      if (rawTitle) {
-        const decoded = decodeURIComponent(rawTitle);
-        if (decoded && !title) setTitle(decoded);
-      }
-      if (rawDesc) {
-        const decoded = decodeURIComponent(rawDesc);
-        if (decoded && !content) setContent(decoded);
-      }
+      const ogTitle = rawTitle ? decodeURIComponent(rawTitle) : "";
+      const ogDesc = rawDesc ? decodeURIComponent(rawDesc) : "";
 
       const blob = await res.blob();
       const ext = blob.type.includes("png")
@@ -1329,7 +1345,35 @@ function ArticleForm({
       const preview = URL.createObjectURL(blob);
       setImageFile(file);
       setOgPreviewUrl(preview);
-      toast.success("Image, titre et description récupérés !");
+
+      // Translate & inject into FR + EN fields
+      if (ogTitle || ogDesc) {
+        try {
+          const transRes = await fetch("/api/translate-og", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: ogTitle, description: ogDesc }),
+          });
+          if (transRes.ok) {
+            const t = await transRes.json();
+            if (t.titleFr) setTitle(t.titleFr);
+            if (t.titleEn) setTitleEn(t.titleEn);
+            if (t.descriptionFr) setContent(t.descriptionFr);
+            if (t.descriptionEn) setContentEn(t.descriptionEn);
+            toast.success("Image, titre et description récupérés et traduits !");
+          } else {
+            if (ogTitle) setTitle(ogTitle);
+            if (ogDesc) setContent(ogDesc);
+            toast.success("Image récupérée (traduction indisponible).");
+          }
+        } catch {
+          if (ogTitle) setTitle(ogTitle);
+          if (ogDesc) setContent(ogDesc);
+          toast.success("Image récupérée (traduction indisponible).");
+        }
+      } else {
+        toast.success("Image récupérée !");
+      }
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Impossible de récupérer l'image"
