@@ -37,6 +37,34 @@ export async function GET(request: NextRequest) {
 
     const html = await pageRes.text();
 
+    // Helper to extract a meta tag content
+    const getMeta = (patterns: RegExp[]) => {
+      for (const re of patterns) {
+        const m = html.match(re);
+        if (m?.[1]) return m[1].trim();
+      }
+      return "";
+    };
+
+    // og:title / twitter:title / <title>
+    const ogTitle =
+      getMeta([
+        /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
+        /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i,
+        /<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)["']/i,
+        /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:title["']/i,
+      ]) || (html.match(/<title[^>]*>([^<]+)<\/title>/i)?.[1]?.trim() ?? "");
+
+    // og:description / twitter:description
+    const ogDescription = getMeta([
+      /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i,
+      /<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']description["']/i,
+      /<meta[^>]+name=["']twitter:description["'][^>]+content=["']([^"']+)["']/i,
+      /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:description["']/i,
+    ]);
+
     // Try og:image first, then twitter:image
     const ogImageMatch =
       html.match(
@@ -86,6 +114,10 @@ export async function GET(request: NextRequest) {
       headers: {
         "Content-Type": contentType,
         "Cache-Control": "no-store",
+        // Pass title & description back to the client via response headers
+        "X-OG-Title": encodeURIComponent(ogTitle),
+        "X-OG-Description": encodeURIComponent(ogDescription),
+        "Access-Control-Expose-Headers": "X-OG-Title, X-OG-Description",
       },
     });
   } catch (err) {

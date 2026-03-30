@@ -697,6 +697,19 @@ function VideoForm({
         const json = await res.json().catch(() => ({}));
         throw new Error(json.error ?? `Erreur ${res.status}`);
       }
+
+      // Read title & description from headers
+      const rawTitle = res.headers.get("X-OG-Title");
+      const rawDesc = res.headers.get("X-OG-Description");
+      if (rawTitle) {
+        const decoded = decodeURIComponent(rawTitle);
+        if (decoded && !title) setTitle(decoded);
+      }
+      if (rawDesc) {
+        const decoded = decodeURIComponent(rawDesc);
+        if (decoded && !description) setDescription(decoded);
+      }
+
       const blob = await res.blob();
       const ext = blob.type.includes("png")
         ? "png"
@@ -712,7 +725,7 @@ function VideoForm({
       const preview = URL.createObjectURL(blob);
       setThumbFile(file);
       setOgPreviewUrl(preview);
-      toast.success("Image récupérée !");
+      toast.success("Image, titre et description récupérés !");
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Impossible de récupérer l'image"
@@ -1288,6 +1301,19 @@ function ArticleForm({
         const json = await res.json().catch(() => ({}));
         throw new Error(json.error ?? `Erreur ${res.status}`);
       }
+
+      // Read title & description from headers
+      const rawTitle = res.headers.get("X-OG-Title");
+      const rawDesc = res.headers.get("X-OG-Description");
+      if (rawTitle) {
+        const decoded = decodeURIComponent(rawTitle);
+        if (decoded && !title) setTitle(decoded);
+      }
+      if (rawDesc) {
+        const decoded = decodeURIComponent(rawDesc);
+        if (decoded && !content) setContent(decoded);
+      }
+
       const blob = await res.blob();
       const ext = blob.type.includes("png")
         ? "png"
@@ -1303,7 +1329,7 @@ function ArticleForm({
       const preview = URL.createObjectURL(blob);
       setImageFile(file);
       setOgPreviewUrl(preview);
-      toast.success("Image récupérée !");
+      toast.success("Image, titre et description récupérés !");
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Impossible de récupérer l'image"
