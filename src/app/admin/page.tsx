@@ -893,6 +893,49 @@ function VideoForm({
       </div>
 
       <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">
+        {/* Lien externe — en haut */}
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-blue-400 uppercase font-medium">
+            Lien externe (optionnel)
+          </div>
+          <p className="text-primary-500 text-xs">
+            Si renseigné, les visiteurs seront redirigés vers ce site au clic.
+            Aucun fichier vidéo requis — seule la miniature est nécessaire.
+          </p>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              URL du site externe
+            </label>
+            <div className="flex gap-2">
+              <input
+                value={externalUrl}
+                onChange={(e) => setExternalUrl(e.target.value)}
+                type="url"
+                placeholder="https://youtube.com/watch?v=..."
+                className="flex-1 rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              />
+              <button
+                type="button"
+                onClick={fetchOgImage}
+                disabled={fetchingOg || !externalUrl.trim()}
+                className="rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-200 px-3 py-2 text-sm hover:bg-blue-500/15 transition-colors disabled:opacity-50 whitespace-nowrap"
+              >
+                {fetchingOg ? "Récupération…" : "Récupérer l’image"}
+              </button>
+            </div>
+          </div>
+          {ogPreviewUrl && (
+            <div className="space-y-1">
+              <div className="text-xs text-primary-500">Aperçu de la miniature récupérée :</div>
+              <img
+                src={ogPreviewUrl}
+                alt="Aperçu OG"
+                className="w-48 rounded-lg border border-gold-500/10 object-cover"
+              />
+            </div>
+          )}
+        </div>
+
         {/* Section Français */}
         <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
           <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
@@ -974,49 +1017,6 @@ function VideoForm({
             />
             Publié
           </label>
-        </div>
-
-        {/* Lien externe */}
-        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
-          <div className="text-xs tracking-wider text-blue-400 uppercase font-medium">
-            Lien externe (optionnel)
-          </div>
-          <p className="text-primary-500 text-xs">
-            Si renseigné, les visiteurs seront redirigés vers ce site au clic.
-            Aucun fichier vidéo requis — seule la miniature est nécessaire.
-          </p>
-          <div className="space-y-2">
-            <label className="block text-xs tracking-wider text-primary-400 uppercase">
-              URL du site externe
-            </label>
-            <div className="flex gap-2">
-              <input
-                value={externalUrl}
-                onChange={(e) => setExternalUrl(e.target.value)}
-                type="url"
-                placeholder="https://youtube.com/watch?v=..."
-                className="flex-1 rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-              />
-              <button
-                type="button"
-                onClick={fetchOgImage}
-                disabled={fetchingOg || !externalUrl.trim()}
-                className="rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-200 px-3 py-2 text-sm hover:bg-blue-500/15 transition-colors disabled:opacity-50 whitespace-nowrap"
-              >
-                {fetchingOg ? "Récupération…" : "Récupérer l'image"}
-              </button>
-            </div>
-          </div>
-          {ogPreviewUrl && (
-            <div className="space-y-1">
-              <div className="text-xs text-primary-500">Aperçu de la miniature récupérée :</div>
-              <img
-                src={ogPreviewUrl}
-                alt="Aperçu OG"
-                className="w-48 rounded-lg border border-gold-500/10 object-cover"
-              />
-            </div>
-          )}
         </div>
 
         <div className="space-y-2">
@@ -1380,8 +1380,8 @@ function ArticleForm({
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!content.trim() && !externalUrl.trim()) {
-      toast.error("Le contenu ou un lien externe est requis.");
+    if (!externalUrl.trim() && !content.trim()) {
+      toast.error("Le contenu est requis si aucun lien externe n'est renseigné.");
       return;
     }
 
@@ -1483,72 +1483,14 @@ function ArticleForm({
       </div>
 
       <form onSubmit={onSubmit} className="grid md:grid-cols-2 gap-4">
-        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
-          <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
-            Français
-          </div>
-          <div className="space-y-2">
-            <label className="block text-xs tracking-wider text-primary-400 uppercase">
-              Titre (FR)
-            </label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-              placeholder="Titre de l'article"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-xs tracking-wider text-primary-400 uppercase">
-              Contenu (FR)
-            </label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              required
-              className="w-full min-h-[120px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-              placeholder="Texte de l'article"
-            />
-          </div>
-        </div>
-
-        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
-          <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
-            English
-          </div>
-          <div className="space-y-2">
-            <label className="block text-xs tracking-wider text-primary-400 uppercase">
-              Title (EN)
-            </label>
-            <input
-              value={titleEn}
-              onChange={(e) => setTitleEn(e.target.value)}
-              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-              placeholder="Article title"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-xs tracking-wider text-primary-400 uppercase">
-              Content (EN)
-            </label>
-            <textarea
-              value={contentEn}
-              onChange={(e) => setContentEn(e.target.value)}
-              className="w-full min-h-[120px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-              placeholder="Article content"
-            />
-          </div>
-        </div>
-
-        {/* Lien externe */}
+        {/* Lien externe — en haut */}
         <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
           <div className="text-xs tracking-wider text-blue-400 uppercase font-medium">
             Lien externe (optionnel)
           </div>
           <p className="text-primary-500 text-xs">
             Si renseigné, les visiteurs seront redirigés vers ce site au clic.
-            L&apos;image sera automatiquement récupérée depuis le lien.
+            Le contenu de l&apos;article est sur le site externe — inutile de le saisir ici.
           </p>
           <div className="space-y-2">
             <label className="block text-xs tracking-wider text-primary-400 uppercase">
@@ -1579,6 +1521,68 @@ function ArticleForm({
                 src={ogPreviewUrl}
                 alt="Aperçu OG"
                 className="w-48 rounded-lg border border-gold-500/10 object-cover"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Section Français */}
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
+            Français
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Titre (FR)
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Titre de l’article"
+            />
+          </div>
+          {!externalUrl.trim() && (
+            <div className="space-y-2">
+              <label className="block text-xs tracking-wider text-primary-400 uppercase">
+                Contenu (FR)
+              </label>
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="w-full min-h-[120px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+                placeholder="Texte de l’article"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-gold-400 uppercase font-medium">
+            English
+          </div>
+          <div className="space-y-2">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Title (EN)
+            </label>
+            <input
+              value={titleEn}
+              onChange={(e) => setTitleEn(e.target.value)}
+              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+              placeholder="Article title"
+            />
+          </div>
+          {!externalUrl.trim() && (
+            <div className="space-y-2">
+              <label className="block text-xs tracking-wider text-primary-400 uppercase">
+                Content (EN)
+              </label>
+              <textarea
+                value={contentEn}
+                onChange={(e) => setContentEn(e.target.value)}
+                className="w-full min-h-[120px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
+                placeholder="Article content"
               />
             </div>
           )}
