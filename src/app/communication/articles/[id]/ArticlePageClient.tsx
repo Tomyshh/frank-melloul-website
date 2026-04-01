@@ -112,14 +112,15 @@ export default function ArticlePageClient({
           </div>
         ) : article ? (
           <>
-            {/* Hero image */}
-            <div className="relative w-full h-[45vh] md:h-[55vh] overflow-hidden">
+            {/* Hero image — plein écran depuis le haut, sous le header fixe */}
+            <div className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden">
               <img
                 src={getPublicUrl(article.image_path)}
                 alt={article.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover object-center"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-navy-950/30 via-transparent to-navy-950" />
+              {/* Dégradé haut pour lisibilité du header */}
+              <div className="absolute inset-0 bg-gradient-to-b from-navy-950/50 via-transparent to-navy-950" />
             </div>
 
             <div className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 max-w-3xl">
