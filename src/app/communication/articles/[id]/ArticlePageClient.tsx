@@ -171,13 +171,17 @@ export default function ArticlePageClient({
 
                 {/* Author signature */}
                 <footer className="mt-16 pt-8 border-t border-gold-500/20">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-[2px] bg-gold-400 mt-3 shrink-0" />
+                  <div className="flex items-center gap-4">
+                    <img
+                      src="/avatar_to_circle.png"
+                      alt="Frank Melloul"
+                      className="w-12 h-12 rounded-full object-cover shrink-0 ring-2 ring-gold-500/30"
+                    />
                     <div>
-                      <p className="text-xs text-primary-500 uppercase tracking-widest mb-1">
+                      <p className="text-xs text-primary-500 uppercase tracking-widest mb-0.5">
                         {byLabel}
                       </p>
-                      <p className="text-primary-100 font-serif text-lg">
+                      <p className="text-primary-100 font-serif text-lg leading-tight">
                         Frank Melloul
                       </p>
                       <p className="text-primary-500 text-sm mt-0.5">
