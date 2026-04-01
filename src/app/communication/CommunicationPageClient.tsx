@@ -286,6 +286,7 @@ export default function CommunicationPageClient() {
                     article={article}
                     index={index}
                     t={t}
+                    locale={locale}
                   />
                 ))}
               </div>
@@ -826,14 +827,21 @@ function ArticleCard({
   article,
   index,
   t,
+  locale,
 }: {
   article: Article;
   index: number;
   t: Translations;
+  locale: "fr" | "en";
 }) {
   const [shareAnchor, setShareAnchor] = useState<DOMRect | null>(null);
   const shareButtonRef = useRef<HTMLButtonElement>(null);
   const isExternal = Boolean(article.externalUrl);
+
+  const internalHref =
+    locale === "fr"
+      ? `/fr/communication/articles/${article.id}`
+      : `/communication/articles/${article.id}`;
 
   const thumbnail = (
     <div className="relative aspect-video mb-3 overflow-hidden rounded-xl bg-navy-800 w-full">
@@ -882,12 +890,23 @@ function ArticleCard({
           {thumbnail}
         </a>
       ) : (
-        thumbnail
+        <Link href={internalHref} className="block">
+          {thumbnail}
+        </Link>
       )}
 
-      <h3 className="text-sm md:text-base font-medium text-primary-100 leading-snug line-clamp-2 mb-1 group-hover:text-gold-400 transition-colors">
-        {article.title}
-      </h3>
+      {isExternal ? (
+        <h3 className="text-sm md:text-base font-medium text-primary-100 leading-snug line-clamp-2 mb-1 group-hover:text-gold-400 transition-colors">
+          {article.title}
+        </h3>
+      ) : (
+        <Link href={internalHref}>
+          <h3 className="text-sm md:text-base font-medium text-primary-100 leading-snug line-clamp-2 mb-1 group-hover:text-gold-400 transition-colors">
+            {article.title}
+          </h3>
+        </Link>
+      )}
+
       {article.content ? (
         <p className="text-xs md:text-sm text-primary-400 line-clamp-3 mb-2 whitespace-pre-line">
           {article.content}
@@ -895,7 +914,7 @@ function ArticleCard({
       ) : null}
 
       <div className="flex items-center gap-3">
-        {isExternal && (
+        {isExternal ? (
           <a
             href={article.externalUrl!}
             target="_blank"
@@ -904,6 +923,13 @@ function ArticleCard({
           >
             {t.readArticle} →
           </a>
+        ) : (
+          <Link
+            href={internalHref}
+            className="text-gold-500 text-xs font-medium tracking-wider uppercase hover:text-gold-400 transition-colors"
+          >
+            {t.readArticle} →
+          </Link>
         )}
         <button
           ref={shareButtonRef}
@@ -920,7 +946,11 @@ function ArticleCard({
         <AnimatePresence>
           {shareAnchor && (
             <SharePopover
-              url={isExternal ? article.externalUrl! : getShareUrl("article", article.id)}
+              url={
+                isExternal
+                  ? article.externalUrl!
+                  : `https://melloulandpartners.com${internalHref}`
+              }
               title={article.title}
               t={t}
               anchorRect={shareAnchor}
