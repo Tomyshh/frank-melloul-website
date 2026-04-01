@@ -111,8 +111,8 @@ export default function ArticlePageClient({
           </div>
         ) : article ? (
           <>
-            {/* Hero image — full screen height, image starts from very top (under transparent header) */}
-            <div className="relative w-full h-screen overflow-hidden">
+            {/* Hero image — tall but not full screen, starts from top under transparent header */}
+            <div className="relative w-full h-[60vh] overflow-hidden">
               <img
                 src={getPublicUrl(article.image_path)}
                 alt={article.title}
