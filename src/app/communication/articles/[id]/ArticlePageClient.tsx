@@ -94,7 +94,6 @@ export default function ArticlePageClient({
     <>
       <Header />
       <main className="min-h-screen bg-navy-950 pb-24">
-        <div className="fixed inset-0 z-0 bg-gradient-to-b from-navy-950 via-navy-900 to-navy-950 pointer-events-none" />
 
         {loading ? (
           <div className="relative z-10 pt-40 container mx-auto px-6 md:px-12 lg:px-20">
@@ -112,15 +111,15 @@ export default function ArticlePageClient({
           </div>
         ) : article ? (
           <>
-            {/* Hero image — plein écran depuis le haut, sous le header fixe */}
-            <div className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden">
+            {/* Hero image — full screen height, image starts from very top (under transparent header) */}
+            <div className="relative w-full h-screen overflow-hidden">
               <img
                 src={getPublicUrl(article.image_path)}
                 alt={article.title}
                 className="w-full h-full object-cover object-center"
               />
-              {/* Dégradé haut pour lisibilité du header */}
-              <div className="absolute inset-0 bg-gradient-to-b from-navy-950/50 via-transparent to-navy-950" />
+              {/* Very subtle top fade so header text remains readable */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-navy-950" />
             </div>
 
             <div className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 max-w-3xl">
