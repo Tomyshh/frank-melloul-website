@@ -6,6 +6,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
 import { toast } from "sonner";
@@ -303,26 +304,53 @@ export default function CommunicationPageClient() {
 
 /* ------------------------------------------------------------------ */
 
+const POPOVER_WIDTH = 212;
+const POPOVER_ESTIMATED_HEIGHT = 260;
+const POPOVER_GAP = 6;
+
 function SharePopover({
   url,
   title,
   t,
   onClose,
+  anchorRect,
 }: {
   url: string;
   title: string;
   t: Translations;
   onClose: () => void;
+  anchorRect: DOMRect;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  // Close on outside click or scroll
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const onMouseDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    const onScroll = () => onClose();
+    document.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("scroll", onScroll);
+    };
   }, [onClose]);
+
+  // Position: prefer below-right-aligned, flip up/left if needed
+  const vw = typeof window !== "undefined" ? window.innerWidth : 1200;
+  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+
+  const spaceBelow = vh - anchorRect.bottom;
+  const openAbove = spaceBelow < POPOVER_ESTIMATED_HEIGHT + POPOVER_GAP;
+
+  const top = openAbove
+    ? anchorRect.top - POPOVER_ESTIMATED_HEIGHT - POPOVER_GAP
+    : anchorRect.bottom + POPOVER_GAP;
+
+  // Right-align to anchor, but clamp so it doesn't overflow viewport
+  const idealRight = vw - anchorRect.right;
+  const right = Math.max(8, Math.min(idealRight, vw - POPOVER_WIDTH - 8));
 
   const encoded = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
@@ -377,14 +405,15 @@ function SharePopover({
     });
   };
 
-  return (
+  const popover = (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+      initial={{ opacity: 0, y: openAbove ? -6 : 6, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+      exit={{ opacity: 0, y: openAbove ? -6 : 6, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className="absolute top-full mt-2 right-0 z-50 w-52 bg-navy-900 border border-gold-500/20 rounded-xl shadow-2xl py-2 overflow-hidden"
+      style={{ position: "fixed", top, right, width: POPOVER_WIDTH, zIndex: 9999 }}
+      className="bg-navy-900 border border-gold-500/20 rounded-xl shadow-2xl py-2 overflow-hidden"
     >
       {socials.map((s) => (
         <a
@@ -423,6 +452,8 @@ function SharePopover({
       </div>
     </motion.div>
   );
+
+  return createPortal(popover, document.body);
 }
 
 /* ------------------------------------------------------------------ */
@@ -458,7 +489,8 @@ function VideoCard({
   t: Translations;
   onOpen: () => void;
 }) {
-  const [showShare, setShowShare] = useState(false);
+  const [shareAnchor, setShareAnchor] = useState<DOMRect | null>(null);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
   const isExternal = Boolean(video.externalUrl);
 
   const handleClick = () => {
@@ -556,29 +588,30 @@ function VideoCard({
         >
           {isExternal ? `${t.readArticle} →` : `${t.watchVideo} →`}
         </button>
-        <div className="relative">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowShare(!showShare);
-            }}
-            className="inline-flex items-center gap-1 text-primary-400 hover:text-gold-400 text-xs transition-colors"
-          >
-            <ShareIcon className="w-3.5 h-3.5" />
-            {t.share}
-          </button>
-          <AnimatePresence>
-            {showShare && (
-              <SharePopover
-                url={isExternal ? video.externalUrl! : getShareUrl("video", video.id)}
-                title={video.title}
-                t={t}
-                onClose={() => setShowShare(false)}
-              />
-            )}
-          </AnimatePresence>
-        </div>
+        <button
+          ref={shareButtonRef}
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            const rect = shareButtonRef.current?.getBoundingClientRect() ?? null;
+            setShareAnchor(shareAnchor ? null : rect);
+          }}
+          className="inline-flex items-center gap-1 text-primary-400 hover:text-gold-400 text-xs transition-colors"
+        >
+          <ShareIcon className="w-3.5 h-3.5" />
+          {t.share}
+        </button>
+        <AnimatePresence>
+          {shareAnchor && (
+            <SharePopover
+              url={isExternal ? video.externalUrl! : getShareUrl("video", video.id)}
+              title={video.title}
+              t={t}
+              anchorRect={shareAnchor}
+              onClose={() => setShareAnchor(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </motion.article>
   );
@@ -598,8 +631,9 @@ function VideoModal({
   const [isLoading, setIsLoading] = useState(true);
   const [ratio, setRatio] = useState<number | null>(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [showShare, setShowShare] = useState(false);
+  const [shareAnchor, setShareAnchor] = useState<DOMRect | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -675,22 +709,27 @@ function VideoModal({
             )}
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <div className="relative">
+            <div>
               <button
+                ref={shareButtonRef}
                 type="button"
-                onClick={() => setShowShare(!showShare)}
+                onClick={() => {
+                  const rect = shareButtonRef.current?.getBoundingClientRect() ?? null;
+                  setShareAnchor(shareAnchor ? null : rect);
+                }}
                 className="inline-flex items-center gap-1.5 text-primary-400 hover:text-gold-400 text-sm transition-colors"
               >
                 <ShareIcon className="w-4 h-4" />
                 {t.share}
               </button>
               <AnimatePresence>
-                {showShare && (
+                {shareAnchor && (
                   <SharePopover
                     url={getShareUrl("video", video.id)}
                     title={video.title}
                     t={t}
-                    onClose={() => setShowShare(false)}
+                    anchorRect={shareAnchor}
+                    onClose={() => setShareAnchor(null)}
                   />
                 )}
               </AnimatePresence>
@@ -792,7 +831,8 @@ function ArticleCard({
   index: number;
   t: Translations;
 }) {
-  const [showShare, setShowShare] = useState(false);
+  const [shareAnchor, setShareAnchor] = useState<DOMRect | null>(null);
+  const shareButtonRef = useRef<HTMLButtonElement>(null);
   const isExternal = Boolean(article.externalUrl);
 
   const thumbnail = (
@@ -865,30 +905,29 @@ function ArticleCard({
             {t.readArticle} →
           </a>
         )}
-        <div className="relative inline-block">
-          <button
-            type="button"
-            onClick={() => setShowShare(!showShare)}
-            className="inline-flex items-center gap-1 text-primary-400 hover:text-gold-400 text-xs transition-colors"
-          >
-            <ShareIcon className="w-3.5 h-3.5" />
-            {t.share}
-          </button>
-          <AnimatePresence>
-            {showShare && (
-              <SharePopover
-                url={
-                  isExternal
-                    ? article.externalUrl!
-                    : getShareUrl("article", article.id)
-                }
-                title={article.title}
-                t={t}
-                onClose={() => setShowShare(false)}
-              />
-            )}
-          </AnimatePresence>
-        </div>
+        <button
+          ref={shareButtonRef}
+          type="button"
+          onClick={() => {
+            const rect = shareButtonRef.current?.getBoundingClientRect() ?? null;
+            setShareAnchor(shareAnchor ? null : rect);
+          }}
+          className="inline-flex items-center gap-1 text-primary-400 hover:text-gold-400 text-xs transition-colors"
+        >
+          <ShareIcon className="w-3.5 h-3.5" />
+          {t.share}
+        </button>
+        <AnimatePresence>
+          {shareAnchor && (
+            <SharePopover
+              url={isExternal ? article.externalUrl! : getShareUrl("article", article.id)}
+              title={article.title}
+              t={t}
+              anchorRect={shareAnchor}
+              onClose={() => setShareAnchor(null)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </motion.article>
   );
