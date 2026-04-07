@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /Users/olimservice/frank-melloul-website/src/app/communication/*.tsx)",
+      "Bash(grep -r \"itemscope\\\\|itemprop\\\\|typeof\\\\|property=\" /Users/olimservice/frank-melloul-website/src --include=*.tsx --include=*.jsx --include=*.ts --include=*.js)"
+    ],
+    "additionalDirectories": [
+      "/Users/olimservice/.claude"
+    ]
+  }
+}

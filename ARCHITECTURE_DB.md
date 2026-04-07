@@ -1,38 +1,31 @@
-# Architecture DB Supabase (site)
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
-## Tables applicatives
-
-### `videos`
-Utilisée par la page `communication` et l'admin.
-
-- `id` (uuid, PK)
-- `title` (text, requis)
-- `description` (text, optionnel)
-- `title_en` (text, optionnel)
-- `description_en` (text, optionnel)
-- `video_path` (text, requis, chemin Storage)
-- `thumbnail_path` (text, requis, chemin Storage)
-- `is_published` (boolean)
-- `sort_order` (integer)
-- `created_at` (timestamptz)
-- `updated_at` (timestamptz)
-
-### `articles`
-Ajoutée pour gérer des posts avec image depuis l'admin.
-
-- `id` (uuid, PK)
-- `title` (text, requis)
-- `content` (text, requis)
-- `title_en` (text, optionnel)
-- `content_en` (text, optionnel)
-- `image_path` (text, requis, chemin Storage)
-- `is_published` (boolean)
-- `sort_order` (integer)
-- `created_at` (timestamptz)
-- `updated_at` (timestamptz)
-
-## Storage
-
-- Bucket média: `media`
-- Vidéos: préfixes `videos/` et `thumbnails/`
-- Articles: préfixe `articles/`
+CREATE TABLE public.articles (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  content text NOT NULL,
+  title_en text,
+  content_en text,
+  image_path text NOT NULL,
+  is_published boolean NOT NULL DEFAULT false,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT articles_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.videos (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  title text NOT NULL,
+  description text,
+  video_path text NOT NULL,
+  thumbnail_path text NOT NULL,
+  is_published boolean NOT NULL DEFAULT true,
+  sort_order integer NOT NULL DEFAULT 0,
+  title_en text,
+  description_en text,
+  external_url text,
+  CONSTRAINT videos_pkey PRIMARY KEY (id)
+);
