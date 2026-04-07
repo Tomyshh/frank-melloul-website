@@ -19,6 +19,7 @@ const pageTranslations = {
     backToHome: "Back to Home",
     watchVideo: "Watch Video",
     articlesTitle: "Posts",
+    videosTitle: "Videos",
     loading: "Loading…",
     empty: "No videos available yet.",
     emptyArticles: "No posts available yet.",
@@ -35,6 +36,7 @@ const pageTranslations = {
     backToHome: "Retour à l'accueil",
     watchVideo: "Regarder",
     articlesTitle: "Articles",
+    videosTitle: "Vidéos",
     loading: "Chargement…",
     empty: "Aucune vidéo disponible pour le moment.",
     emptyArticles: "Aucun article disponible pour le moment.",
@@ -250,16 +252,18 @@ export default function CommunicationPageClient() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
             {loading ? (
               <div className="text-primary-300 text-sm">{t.loading}</div>
-            ) : videos.length === 0 ? (
-              <div className="text-primary-300 text-sm">{t.empty}</div>
+            ) : articles.length === 0 ? (
+              <div className="text-primary-300 text-sm">
+                {t.emptyArticles}
+              </div>
             ) : (
-              videos.map((video, index) => (
-                <VideoCard
-                  key={video.id}
-                  video={video}
+              articles.map((article, index) => (
+                <ArticleCard
+                  key={article.id}
+                  article={article}
                   index={index}
                   t={t}
-                  onOpen={() => setActive(video)}
+                  locale={locale}
                 />
               ))
             )}
@@ -269,24 +273,22 @@ export default function CommunicationPageClient() {
             <div className="flex items-center gap-4 mb-8">
               <span className="w-6 h-[1px] bg-gold-400" />
               <h2 className="text-3xl md:text-4xl font-serif text-primary-100">
-                {t.articlesTitle}
+                {t.videosTitle}
               </h2>
             </div>
             {loading ? (
               <div className="text-primary-300 text-sm">{t.loading}</div>
-            ) : articles.length === 0 ? (
-              <div className="text-primary-300 text-sm">
-                {t.emptyArticles}
-              </div>
+            ) : videos.length === 0 ? (
+              <div className="text-primary-300 text-sm">{t.empty}</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8">
-                {articles.map((article, index) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
+                {videos.map((video, index) => (
+                  <VideoCard
+                    key={video.id}
+                    video={video}
                     index={index}
                     t={t}
-                    locale={locale}
+                    onOpen={() => setActive(video)}
                   />
                 ))}
               </div>

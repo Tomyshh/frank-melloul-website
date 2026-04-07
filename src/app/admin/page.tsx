@@ -245,8 +245,8 @@ export default function AdminPage() {
           <LoginPanel />
         ) : (
           <div className="space-y-8">
-            <VideosDashboard />
             <ArticlesDashboard />
+            <VideosDashboard />
           </div>
         )}
       </div>
