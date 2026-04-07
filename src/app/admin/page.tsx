@@ -53,6 +53,91 @@ function shareVideo(videoId: string) {
   });
 }
 
+function getArticleShareUrl(article: ArticleRow) {
+  if (article.external_url) return article.external_url;
+  return `https://melloulandpartners.com/communication/articles/${article.id}`;
+}
+
+function AdminSharePopover({
+  url,
+  title,
+  onClose,
+}: {
+  url: string;
+  title: string;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  const encoded = encodeURIComponent(url);
+  const encodedTitle = encodeURIComponent(title);
+
+  const socials = [
+    {
+      name: "Facebook",
+      href: `https://www.facebook.com/sharer/sharer.php?u=${encoded}`,
+      color: "text-[#1877F2]",
+    },
+    {
+      name: "WhatsApp",
+      href: `https://wa.me/?text=${encodedTitle}%20${encoded}`,
+      color: "text-[#25D366]",
+    },
+    {
+      name: "X",
+      href: `https://twitter.com/intent/tweet?url=${encoded}&text=${encodedTitle}`,
+      color: "text-white",
+    },
+    {
+      name: "LinkedIn",
+      href: `https://www.linkedin.com/sharing/share-offsite/?url=${encoded}`,
+      color: "text-[#0A66C2]",
+    },
+  ];
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success("Lien copié !");
+      onClose();
+    });
+  };
+
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 top-full mt-1 z-50 bg-navy-900 border border-gold-500/20 rounded-xl shadow-2xl py-2 w-48"
+    >
+      {socials.map((s) => (
+        <a
+          key={s.name}
+          href={s.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 px-4 py-2 hover:bg-navy-800 transition-colors text-sm"
+          onClick={onClose}
+        >
+          <span className={s.color}>{s.name}</span>
+        </a>
+      ))}
+      <button
+        type="button"
+        onClick={copyLink}
+        className="flex items-center gap-3 px-4 py-2 hover:bg-navy-800 transition-colors text-sm text-primary-200 w-full text-left"
+      >
+        Copier le lien
+      </button>
+    </div>
+  );
+}
+
 function getPublicUrl(client: NonNullable<typeof supabase>, path: string) {
   const { data } = client.storage.from(SUPABASE_MEDIA_BUCKET).getPublicUrl(path);
   return data.publicUrl;
@@ -1080,6 +1165,7 @@ function ArticlesDashboard() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<ArticleRow | null>(null);
   const [creating, setCreating] = useState(false);
+  const [sharingArticleId, setSharingArticleId] = useState<string | null>(null);
 
   const refresh = async () => {
     setLoading(true);
@@ -1251,6 +1337,26 @@ function ArticlesDashboard() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSharingArticleId(
+                              sharingArticleId === a.id ? null : a.id
+                            )
+                          }
+                          className="rounded-lg border border-blue-500/20 bg-blue-500/10 text-blue-200 px-3 py-2 text-sm hover:bg-blue-500/15 transition-colors"
+                        >
+                          Partager
+                        </button>
+                        {sharingArticleId === a.id && (
+                          <AdminSharePopover
+                            url={getArticleShareUrl(a)}
+                            title={a.title}
+                            onClose={() => setSharingArticleId(null)}
+                          />
+                        )}
+                      </div>
                       <button
                         type="button"
                         onClick={() => setEditing(a)}
