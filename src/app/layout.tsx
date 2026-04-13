@@ -169,6 +169,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
+                document.documentElement.lang = location.pathname.startsWith('/fr') ? 'fr' : 'en';
                 if (!document.querySelector('link[rel="preload"][href="/only_gold_logo.png"]')) {
                   const link1 = document.createElement('link');
                   link1.rel = 'preload';

@@ -6,11 +6,22 @@ import ArticlePageClient from "@/app/communication/articles/[slug]/ArticlePageCl
 
 const SITE_URL = "https://melloulandpartners.com";
 const FALLBACK_IMAGE = `${SITE_URL}/logo-gold.png`;
+const META_DESC_MAX = 160;
+const ARTICLE_DESC_MAX = 300;
 
 function imageUrl(path: string) {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!base) return FALLBACK_IMAGE;
   return `${base}/storage/v1/object/public/${SUPABASE_MEDIA_BUCKET}/${path}`;
+}
+
+function toPlainText(value: string): string {
+  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function cutText(value: string, max: number): string {
+  const plain = toPlainText(value);
+  return plain.length > max ? `${plain.slice(0, max - 1)}…` : plain;
 }
 
 type Props = { params: { slug: string } };
@@ -48,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const articleSlug = data.slug ?? data.id ?? params.slug;
   const title = (data.title_en ?? data.title) + " | Melloul & Partners";
-  const description = ((data.content_en ?? data.content) ?? "").slice(0, 160);
+  const description = cutText((data.content_en ?? data.content) ?? "", META_DESC_MAX);
   const ogImage = data.image_path ? imageUrl(data.image_path) : FALLBACK_IMAGE;
   const url = `${SITE_URL}/communication/articles/${articleSlug}`;
 
@@ -60,6 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       languages: {
         en: `/communication/articles/${articleSlug}`,
         fr: `/fr/communication/articles/${articleSlug}`,
+        "x-default": `/communication/articles/${articleSlug}`,
       },
     },
     openGraph: {
@@ -86,7 +98,9 @@ export default async function ArticlePage({ params }: Props) {
   const articleSlug = data?.slug ?? data?.id ?? params.slug;
   const ogImage = data?.image_path ? imageUrl(data.image_path) : FALLBACK_IMAGE;
   const articleTitle = data ? (data.title_en ?? data.title) : "";
-  const articleDesc = data ? ((data.content_en ?? data.content) ?? "").slice(0, 300) : "";
+  const articleDesc = data
+    ? cutText((data.content_en ?? data.content) ?? "", ARTICLE_DESC_MAX)
+    : "";
 
   const jsonLd = data
     ? {
