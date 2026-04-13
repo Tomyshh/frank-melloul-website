@@ -13,6 +13,17 @@ function imageUrl(path: string) {
 }
 
 type Props = { params: { slug: string } };
+type ArticleRow = {
+  id: string;
+  slug: string | null;
+  title: string;
+  title_en: string | null;
+  content: string;
+  content_en: string | null;
+  image_path: string;
+  created_at: string;
+  updated_at: string;
+};
 
 const COLS = "id,slug,title,title_en,content,content_en,image_path,created_at,updated_at";
 
@@ -27,8 +38,7 @@ async function getArticle(identifier: string) {
     .eq("is_published", true)
     .single();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return data as any;
+  return data as ArticleRow | null;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

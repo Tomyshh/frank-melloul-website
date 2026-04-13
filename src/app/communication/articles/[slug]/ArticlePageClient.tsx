@@ -27,6 +27,14 @@ interface RelatedArticle {
   image_path: string;
   created_at: string;
 }
+type RelatedArticleQueryRow = {
+  id: string;
+  slug: string | null;
+  title: string;
+  title_en: string | null;
+  image_path: string;
+  created_at: string;
+};
 
 function getPublicUrl(path: string) {
   return (
@@ -124,8 +132,7 @@ export default function ArticlePageClient({
       .then(({ data }) => {
         if (!data) return;
         setRelatedArticles(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          data.map((a: any) => ({
+          (data as RelatedArticleQueryRow[]).map((a) => ({
             id: a.id,
             slug: a.slug ?? null,
             title: locale === "en" ? (a.title_en ?? a.title) : a.title,

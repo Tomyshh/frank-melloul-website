@@ -6,8 +6,6 @@ export function isUUID(value: string): boolean {
   return UUID_RE.test(value);
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 /**
  * Fetches a single published article by slug or UUID.
  * If the identifier looks like a UUID, queries by `id`.
@@ -16,7 +14,7 @@ export function isUUID(value: string): boolean {
 export async function fetchArticle(
   identifier: string,
   columns: string
-): Promise<Record<string, any> | null> {
+): Promise<Record<string, unknown> | null> {
   if (!supabase) return null;
 
   if (isUUID(identifier)) {
@@ -26,7 +24,7 @@ export async function fetchArticle(
       .eq("id", identifier)
       .eq("is_published", true)
       .single();
-    return data as Record<string, any> | null;
+    return data as Record<string, unknown> | null;
   }
 
   const { data, error } = await supabase
@@ -37,7 +35,7 @@ export async function fetchArticle(
     .single();
 
   if (error && error.code === "PGRST204") return null;
-  return data as Record<string, any> | null;
+  return data as Record<string, unknown> | null;
 }
 
 /**
@@ -48,7 +46,7 @@ export async function fetchRelatedArticles(
   currentIdentifier: string,
   columns: string,
   limit = 4
-): Promise<Record<string, any>[]> {
+): Promise<Record<string, unknown>[]> {
   if (!supabase) return [];
 
   const filterCol = isUUID(currentIdentifier) ? "id" : "slug";
@@ -61,5 +59,5 @@ export async function fetchRelatedArticles(
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  return (data as Record<string, any>[] | null) ?? [];
+  return (data as Record<string, unknown>[] | null) ?? [];
 }
