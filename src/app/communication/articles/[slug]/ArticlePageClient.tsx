@@ -9,8 +9,11 @@ import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 interface ArticleData {
-  slug: string;
+  id: string;
+  slug: string | null;
   title: string;
   content: string;
   image_path: string;
@@ -18,7 +21,8 @@ interface ArticleData {
 }
 
 interface RelatedArticle {
-  slug: string;
+  id: string;
+  slug: string | null;
   title: string;
   image_path: string;
   created_at: string;
@@ -48,12 +52,13 @@ function formatDateShort(iso: string, locale: "fr" | "en") {
 }
 
 export default function ArticlePageClient({
-  slug,
+  identifier,
   locale,
 }: {
-  slug: string;
+  identifier: string;
   locale: "fr" | "en";
 }) {
+  const isId = UUID_RE.test(identifier);
   const [article, setArticle] = useState<ArticleData | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<RelatedArticle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,10 +90,12 @@ export default function ArticlePageClient({
       return;
     }
 
+    const filterCol = isId ? "id" : "slug";
+
     supabase
       .from("articles")
-      .select("slug,title,content,title_en,content_en,image_path,created_at")
-      .eq("slug", slug)
+      .select("id,slug,title,content,title_en,content_en,image_path,created_at")
+      .eq(filterCol, identifier)
       .eq("is_published", true)
       .single()
       .then(({ data, error }) => {
@@ -97,43 +104,37 @@ export default function ArticlePageClient({
           setNotFound(true);
           return;
         }
-        const d = data as {
-          slug: string;
-          title: string;
-          content: string;
-          title_en: string | null;
-          content_en: string | null;
-          image_path: string;
-          created_at: string;
-        };
         setArticle({
-          slug: d.slug,
-          title: locale === "en" ? (d.title_en ?? d.title) : d.title,
-          content: locale === "en" ? (d.content_en ?? d.content) : d.content,
-          image_path: d.image_path,
-          created_at: d.created_at,
+          id: data.id,
+          slug: data.slug ?? null,
+          title: locale === "en" ? (data.title_en ?? data.title) : data.title,
+          content: locale === "en" ? (data.content_en ?? data.content) : data.content,
+          image_path: data.image_path,
+          created_at: data.created_at,
         });
       });
 
     supabase
       .from("articles")
-      .select("slug,title,title_en,image_path,created_at")
+      .select("id,slug,title,title_en,image_path,created_at")
       .eq("is_published", true)
-      .neq("slug", slug)
+      .neq(filterCol, identifier)
       .order("created_at", { ascending: false })
       .limit(4)
       .then(({ data }) => {
         if (!data) return;
         setRelatedArticles(
-          data.map((a: { slug: string; title: string; title_en: string | null; image_path: string; created_at: string }) => ({
-            slug: a.slug,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.map((a: any) => ({
+            id: a.id,
+            slug: a.slug ?? null,
             title: locale === "en" ? (a.title_en ?? a.title) : a.title,
             image_path: a.image_path,
             created_at: a.created_at,
           }))
         );
       });
-  }, [slug, locale]);
+  }, [identifier, locale, isId]);
 
   return (
     <>
@@ -250,7 +251,7 @@ export default function ArticlePageClient({
                       <AnimatePresence>
                         {shareAnchor && (
                           <ArticleSharePopover
-                            url={getArticleUrl(slug, locale)}
+                            url={getArticleUrl(article.slug ?? article.id, locale)}
                             title={article.title}
                             copyLinkLabel={copyLinkLabel}
                             linkCopiedLabel={linkCopiedLabel}
@@ -265,13 +266,20 @@ export default function ArticlePageClient({
                     <div className="w-12 h-[2px] bg-gold-500 mb-10" />
 
                     {/* Body content */}
-                    <div className="prose-article text-primary-300 text-base md:text-lg leading-relaxed whitespace-pre-line space-y-6">
-                      {article.content.split(/\n{2,}/).map((paragraph, i) => (
-                        <p key={i} className="text-primary-300 leading-[1.85]">
-                          {paragraph.trim()}
-                        </p>
-                      ))}
-                    </div>
+                    {article.content.trimStart().startsWith("<") ? (
+                      <div
+                        className="article-rich-content text-base md:text-lg"
+                        dangerouslySetInnerHTML={{ __html: article.content }}
+                      />
+                    ) : (
+                      <div className="text-primary-300 text-base md:text-lg leading-relaxed whitespace-pre-line space-y-6">
+                        {article.content.split(/\n{2,}/).map((paragraph, i) => (
+                          <p key={i} className="text-primary-300 leading-[1.85]">
+                            {paragraph.trim()}
+                          </p>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Author signature */}
                     <footer className="mt-16 pt-8 border-t border-gold-500/20">
@@ -314,12 +322,13 @@ export default function ArticlePageClient({
 
                     <div className="space-y-5">
                       {relatedArticles.map((rel) => {
+                        const relIdentifier = rel.slug ?? rel.id;
                         const articleHref = locale === "fr"
-                          ? `/fr/communication/articles/${rel.slug}`
-                          : `/communication/articles/${rel.slug}`;
+                          ? `/fr/communication/articles/${relIdentifier}`
+                          : `/communication/articles/${relIdentifier}`;
                         return (
                           <Link
-                            key={rel.slug}
+                            key={rel.id}
                             href={articleHref}
                             className="group flex gap-3 items-start p-3 rounded-lg border border-gold-500/10 bg-navy-900/40 hover:border-gold-500/30 hover:bg-navy-800/60 transition-all duration-200"
                           >

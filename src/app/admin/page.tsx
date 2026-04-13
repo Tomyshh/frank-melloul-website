@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
+import dynamic from "next/dynamic";
+
+const RichTextEditor = dynamic(() => import("@/components/RichTextEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full min-h-[220px] rounded-xl bg-navy-900/50 border border-gold-500/10 animate-pulse" />
+  ),
+});
 
 type VideoRow = {
   id: string;
@@ -1689,11 +1697,10 @@ function ArticleForm({
               <label className="block text-xs tracking-wider text-primary-400 uppercase">
                 Contenu (FR)
               </label>
-              <textarea
+              <RichTextEditor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="w-full min-h-[120px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-                placeholder="Texte de l’article"
+                onChange={setContent}
+                placeholder="Rédigez le contenu de l’article en français…"
               />
             </div>
           )}
@@ -1719,11 +1726,10 @@ function ArticleForm({
               <label className="block text-xs tracking-wider text-primary-400 uppercase">
                 Content (EN)
               </label>
-              <textarea
+              <RichTextEditor
                 value={contentEn}
-                onChange={(e) => setContentEn(e.target.value)}
-                className="w-full min-h-[120px] rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
-                placeholder="Article content"
+                onChange={setContentEn}
+                placeholder="Write the article content in English…"
               />
             </div>
           )}

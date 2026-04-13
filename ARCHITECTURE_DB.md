@@ -3,7 +3,6 @@
 
 CREATE TABLE public.articles (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  slug text NOT NULL,
   title text NOT NULL,
   content text NOT NULL,
   title_en text,
@@ -13,8 +12,9 @@ CREATE TABLE public.articles (
   sort_order integer NOT NULL DEFAULT 0,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   updated_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT articles_pkey PRIMARY KEY (id),
-  CONSTRAINT articles_slug_unique UNIQUE (slug)
+  external_url text,
+  slug text NOT NULL UNIQUE,
+  CONSTRAINT articles_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.videos (
   id uuid NOT NULL DEFAULT gen_random_uuid(),

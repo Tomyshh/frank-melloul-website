@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
+import { isUUID } from "@/lib/articleQuery";
 import ArticlePageClient from "@/app/communication/articles/[slug]/ArticlePageClient";
 
 const SITE_URL = "https://melloulandpartners.com";
@@ -13,34 +14,41 @@ function imageUrl(path: string) {
 
 type Props = { params: { slug: string } };
 
-async function getArticle(slug: string) {
+const COLS = "id,slug,title,title_en,content,content_en,image_path,created_at,updated_at";
+
+async function getArticle(identifier: string) {
   if (!supabase) return null;
+
+  const col = isUUID(identifier) ? "id" : "slug";
   const { data } = await supabase
     .from("articles")
-    .select("slug,title,title_en,content,content_en,image_path,created_at,updated_at")
-    .eq("slug", slug)
+    .select(COLS)
+    .eq(col, identifier)
     .eq("is_published", true)
     .single();
-  return data;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return data as any;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getArticle(params.slug);
   if (!data) return { title: "Article | Melloul & Partners" };
 
+  const articleSlug = data.slug ?? data.id ?? params.slug;
   const title = data.title + " | Melloul & Partners";
   const description = (data.content ?? "").slice(0, 160);
   const ogImage = data.image_path ? imageUrl(data.image_path) : FALLBACK_IMAGE;
-  const url = `${SITE_URL}/fr/communication/articles/${params.slug}`;
+  const url = `${SITE_URL}/fr/communication/articles/${articleSlug}`;
 
   return {
     title,
     description,
     alternates: {
-      canonical: `/fr/communication/articles/${params.slug}`,
+      canonical: `/fr/communication/articles/${articleSlug}`,
       languages: {
-        en: `/communication/articles/${params.slug}`,
-        fr: `/fr/communication/articles/${params.slug}`,
+        en: `/communication/articles/${articleSlug}`,
+        fr: `/fr/communication/articles/${articleSlug}`,
       },
     },
     openGraph: {
@@ -62,6 +70,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArticleFrPage({ params }: Props) {
   const data = await getArticle(params.slug);
 
+  const articleSlug = data?.slug ?? data?.id ?? params.slug;
   const ogImage = data?.image_path ? imageUrl(data.image_path) : FALLBACK_IMAGE;
   const articleTitle = data?.title ?? "";
   const articleDesc = data ? (data.content ?? "").slice(0, 300) : "";
@@ -76,10 +85,10 @@ export default async function ArticleFrPage({ params }: Props) {
         datePublished: data.created_at,
         dateModified: data.updated_at,
         inLanguage: "fr",
-        url: `${SITE_URL}/fr/communication/articles/${params.slug}`,
+        url: `${SITE_URL}/fr/communication/articles/${articleSlug}`,
         mainEntityOfPage: {
           "@type": "WebPage",
-          "@id": `${SITE_URL}/fr/communication/articles/${params.slug}`,
+          "@id": `${SITE_URL}/fr/communication/articles/${articleSlug}`,
         },
         author: {
           "@type": "Person",
@@ -112,7 +121,7 @@ export default async function ArticleFrPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ArticlePageClient slug={params.slug} locale="fr" />
+      <ArticlePageClient identifier={params.slug} locale="fr" />
     </>
   );
 }

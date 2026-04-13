@@ -42,25 +42,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const { data: articles } = await supabase
     .from("articles")
-    .select("slug,updated_at")
+    .select("id,slug,updated_at")
     .eq("is_published", true)
     .order("updated_at", { ascending: false });
 
   const articlePages: MetadataRoute.Sitemap = (articles ?? []).flatMap(
-    (article) => [
-      {
-        url: `${baseUrl}/communication/articles/${article.slug}`,
-        lastModified: new Date(article.updated_at),
-        changeFrequency: "weekly" as const,
-        priority: 0.8,
-      },
-      {
-        url: `${baseUrl}/fr/communication/articles/${article.slug}`,
-        lastModified: new Date(article.updated_at),
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
-      },
-    ]
+    (article) => {
+      const identifier = article.slug ?? article.id;
+      return [
+        {
+          url: `${baseUrl}/communication/articles/${identifier}`,
+          lastModified: new Date(article.updated_at),
+          changeFrequency: "weekly" as const,
+          priority: 0.8,
+        },
+        {
+          url: `${baseUrl}/fr/communication/articles/${identifier}`,
+          lastModified: new Date(article.updated_at),
+          changeFrequency: "weekly" as const,
+          priority: 0.7,
+        },
+      ];
+    }
   );
 
   return [...staticPages, ...articlePages];
