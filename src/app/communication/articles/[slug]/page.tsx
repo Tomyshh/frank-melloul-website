@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
-import ArticlePageClient from "./ArticlePageClient";
+import ArticlePageClient from "@/app/communication/articles/[slug]/ArticlePageClient";
 
 const SITE_URL = "https://melloulandpartners.com";
 const FALLBACK_IMAGE = `${SITE_URL}/logo-gold.png`;
