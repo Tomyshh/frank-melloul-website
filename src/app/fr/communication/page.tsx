@@ -134,7 +134,7 @@ async function buildSchemaFr() {
       .order("created_at", { ascending: false }),
     supabase
       .from("articles")
-      .select("id,title,content,image_path,created_at,updated_at")
+      .select("id,slug,title,content,image_path,created_at,updated_at")
       .eq("is_published", true)
       .order("sort_order", { ascending: false })
       .order("created_at", { ascending: false }),
@@ -172,7 +172,7 @@ async function buildSchemaFr() {
       itemListElement: articles.map((a, i) => ({
         "@type": "ListItem",
         position: i + 1,
-        url: `${SITE_URL}/fr/communication/articles/${a.id}`,
+        url: `${SITE_URL}/fr/communication/articles/${a.slug ?? a.id}`,
         name: a.title,
       })),
     });

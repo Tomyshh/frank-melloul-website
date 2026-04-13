@@ -79,6 +79,7 @@ interface VideoDbRow {
 
 interface ArticleDbRow {
   id: string;
+  slug: string | null;
   title: string;
   content: string;
   title_en: string | null;
@@ -89,6 +90,7 @@ interface ArticleDbRow {
 
 interface Article {
   id: string;
+  slug: string | null;
   title: string;
   content: string;
   image: string;
@@ -140,7 +142,7 @@ export default function CommunicationPageClient() {
         client!
           .from("articles")
           .select(
-            "id,title,content,title_en,content_en,image_path,external_url,is_published,sort_order,created_at"
+            "id,slug,title,content,title_en,content_en,image_path,external_url,is_published,sort_order,created_at"
           )
           .eq("is_published", true)
           .order("sort_order", { ascending: false })
@@ -181,6 +183,7 @@ export default function CommunicationPageClient() {
       }));
       const mappedArticles = articleRows.map((row) => ({
         id: row.id,
+        slug: row.slug ?? null,
         title:
           (isEn ? (row.title_en ?? row.title) : row.title) ?? "",
         content:
@@ -841,6 +844,11 @@ function ArticleCard({
   const isExternal = Boolean(article.externalUrl);
 
   const internalHref =
+    article.slug
+      ? locale === "fr"
+        ? `/fr/communication/articles/${article.slug}`
+        : `/communication/articles/${article.slug}`
+      :
     locale === "fr"
       ? `/fr/communication/articles/${article.id}`
       : `/communication/articles/${article.id}`;

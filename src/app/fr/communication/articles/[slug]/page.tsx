@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
 import { isUUID } from "@/lib/articleQuery";
+import { permanentRedirect } from "next/navigation";
 import ArticlePageClient from "@/app/communication/articles/[slug]/ArticlePageClient";
 
 const SITE_URL = "https://melloulandpartners.com";
@@ -79,6 +80,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArticleFrPage({ params }: Props) {
   const data = await getArticle(params.slug);
+  if (data?.slug && isUUID(params.slug)) {
+    permanentRedirect(`/fr/communication/articles/${data.slug}`);
+  }
 
   const articleSlug = data?.slug ?? data?.id ?? params.slug;
   const ogImage = data?.image_path ? imageUrl(data.image_path) : FALLBACK_IMAGE;
