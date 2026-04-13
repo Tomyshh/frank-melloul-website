@@ -17,6 +17,13 @@ interface ArticleData {
   created_at: string;
 }
 
+interface RelatedArticle {
+  id: string;
+  title: string;
+  image_path: string;
+  created_at: string;
+}
+
 function getPublicUrl(path: string) {
   return (
     supabase?.storage.from(SUPABASE_MEDIA_BUCKET).getPublicUrl(path).data
@@ -32,6 +39,14 @@ function formatDate(iso: string, locale: "fr" | "en") {
   }).format(new Date(iso));
 }
 
+function formatDateShort(iso: string, locale: "fr" | "en") {
+  return new Intl.DateTimeFormat(locale === "fr" ? "fr-FR" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(iso));
+}
+
 export default function ArticlePageClient({
   id,
   locale,
@@ -40,6 +55,7 @@ export default function ArticlePageClient({
   locale: "fr" | "en";
 }) {
   const [article, setArticle] = useState<ArticleData | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<RelatedArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -59,6 +75,10 @@ export default function ArticlePageClient({
   const shareLabel = locale === "fr" ? "Partager" : "Share";
   const copyLinkLabel = locale === "fr" ? "Copier le lien" : "Copy link";
   const linkCopiedLabel = locale === "fr" ? "Lien copié !" : "Link copied to clipboard!";
+  const mayInterestLabel = locale === "fr" ? "Peut vous intéresser" : "May Interest You";
+  const homeLabel = locale === "fr" ? "Accueil" : "Home";
+  const communicationLabel = "Communication";
+  const homeHref = locale === "fr" ? "/fr" : "/";
 
   useEffect(() => {
     if (!supabase) {
@@ -96,6 +116,25 @@ export default function ArticlePageClient({
           created_at: d.created_at,
         });
       });
+
+    supabase
+      .from("articles")
+      .select("id,title,title_en,image_path,created_at")
+      .eq("is_published", true)
+      .neq("id", id)
+      .order("created_at", { ascending: false })
+      .limit(4)
+      .then(({ data }) => {
+        if (!data) return;
+        setRelatedArticles(
+          data.map((a: { id: string; title: string; title_en: string | null; image_path: string; created_at: string }) => ({
+            id: a.id,
+            title: locale === "en" ? (a.title_en ?? a.title) : a.title,
+            image_path: a.image_path,
+            created_at: a.created_at,
+          }))
+        );
+      });
   }, [id, locale]);
 
   return (
@@ -119,114 +158,210 @@ export default function ArticlePageClient({
           </div>
         ) : article ? (
           <>
-            {/* Hero image — tall but not full screen, starts from top under transparent header */}
+            {/* Hero image */}
             <div className="relative w-full h-[60vh] overflow-hidden">
               <img
                 src={getPublicUrl(article.image_path)}
                 alt={article.title}
                 className="w-full h-full object-cover object-center"
               />
-              {/* Very subtle top fade so header text remains readable */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-navy-950" />
             </div>
 
-            <div className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 max-w-3xl">
-              {/* Back link */}
-              <motion.div
-                initial={{ opacity: 0, x: -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4 }}
-                className="-mt-6 mb-8"
-              >
-                <Link
-                  href={backHref}
-                  className="inline-flex items-center gap-2 text-primary-400 hover:text-gold-500 text-sm transition-colors"
-                >
-                  <span>←</span>
-                  <span>{backLabel.replace("← ", "")}</span>
-                </Link>
-              </motion.div>
+            <div className="relative z-10 container mx-auto px-6 md:px-12 lg:px-20 max-w-7xl">
 
-              <motion.article
-                initial={{ opacity: 0, y: 24 }}
+              {/* Breadcrumbs */}
+              <motion.nav
+                initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
+                transition={{ duration: 0.4 }}
+                aria-label="breadcrumb"
+                className="-mt-4 mb-8"
               >
-                {/* Date */}
-                <div className="flex items-center gap-3 mb-5">
-                  <span className="w-5 h-[1px] bg-gold-400" />
-                  <time className="text-primary-500 text-xs tracking-wider uppercase">
-                    {formatDate(article.created_at, locale)}
-                  </time>
-                </div>
+                <ol className="flex items-center gap-2 text-xs text-primary-500 flex-wrap">
+                  <li>
+                    <Link href={homeHref} className="hover:text-gold-400 transition-colors">
+                      {homeLabel}
+                    </Link>
+                  </li>
+                  <li className="text-primary-700">/</li>
+                  <li>
+                    <Link href={backHref} className="hover:text-gold-400 transition-colors">
+                      {communicationLabel}
+                    </Link>
+                  </li>
+                  <li className="text-primary-700">/</li>
+                  <li className="text-primary-400 truncate max-w-[200px] sm:max-w-xs md:max-w-sm" aria-current="page">
+                    {article.title}
+                  </li>
+                </ol>
+              </motion.nav>
 
-                {/* Title */}
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif text-primary-100 leading-tight mb-6">
-                  {article.title}
-                </h1>
+              {/* Two-column layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] xl:grid-cols-[1fr_340px] gap-12 xl:gap-16 items-start">
 
-                {/* Share button */}
-                <div className="mb-8">
-                  <button
-                    ref={shareButtonRef}
-                    type="button"
-                    onClick={() => {
-                      const rect = shareButtonRef.current?.getBoundingClientRect() ?? null;
-                      setShareAnchor(shareAnchor ? null : rect);
-                    }}
-                    className="group inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold-500/20 bg-navy-900/60 hover:border-gold-500/40 hover:bg-navy-800/80 text-primary-300 hover:text-gold-400 text-sm transition-all duration-200"
+                {/* ── Main content ── */}
+                <div>
+                  {/* Back link */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -16 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="mb-8"
                   >
-                    <ShareIcon className="w-4 h-4" />
-                    {shareLabel}
-                  </button>
-                  <AnimatePresence>
-                    {shareAnchor && (
-                      <ArticleSharePopover
-                        url={getArticleUrl(id, locale)}
-                        title={article.title}
-                        copyLinkLabel={copyLinkLabel}
-                        linkCopiedLabel={linkCopiedLabel}
-                        anchorRect={shareAnchor}
-                        onClose={() => setShareAnchor(null)}
-                      />
-                    )}
-                  </AnimatePresence>
-                </div>
+                    <Link
+                      href={backHref}
+                      className="inline-flex items-center gap-2 text-primary-400 hover:text-gold-500 text-sm transition-colors"
+                    >
+                      <span>←</span>
+                      <span>{backLabel.replace("← ", "")}</span>
+                    </Link>
+                  </motion.div>
 
-                {/* Gold divider */}
-                <div className="w-12 h-[2px] bg-gold-500 mb-10" />
-
-                {/* Body content */}
-                <div className="prose-article text-primary-300 text-base md:text-lg leading-relaxed whitespace-pre-line space-y-6">
-                  {article.content.split(/\n{2,}/).map((paragraph, i) => (
-                    <p key={i} className="text-primary-300 leading-[1.85]">
-                      {paragraph.trim()}
-                    </p>
-                  ))}
-                </div>
-
-                {/* Author signature */}
-                <footer className="mt-16 pt-8 border-t border-gold-500/20">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src="/avatar_to_circle.png"
-                      alt="Frank Melloul"
-                      className="w-12 h-12 rounded-full object-cover shrink-0 ring-2 ring-gold-500/30"
-                    />
-                    <div>
-                      <p className="text-xs text-primary-500 uppercase tracking-widest mb-0.5">
-                        {byLabel}
-                      </p>
-                      <p className="text-primary-100 font-serif text-lg leading-tight">
-                        Frank Melloul
-                      </p>
-                      <p className="text-primary-500 text-sm mt-0.5">
-                        {roleLabel}
-                      </p>
+                  <motion.article
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                  >
+                    {/* Date */}
+                    <div className="flex items-center gap-3 mb-5">
+                      <span className="w-5 h-[1px] bg-gold-400" />
+                      <time className="text-primary-500 text-xs tracking-wider uppercase">
+                        {formatDate(article.created_at, locale)}
+                      </time>
                     </div>
-                  </div>
-                </footer>
-              </motion.article>
+
+                    {/* Title */}
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif text-primary-100 leading-tight mb-6">
+                      {article.title}
+                    </h1>
+
+                    {/* Share button */}
+                    <div className="mb-8">
+                      <button
+                        ref={shareButtonRef}
+                        type="button"
+                        onClick={() => {
+                          const rect = shareButtonRef.current?.getBoundingClientRect() ?? null;
+                          setShareAnchor(shareAnchor ? null : rect);
+                        }}
+                        className="group inline-flex items-center gap-2 px-4 py-2 rounded-full border border-gold-500/20 bg-navy-900/60 hover:border-gold-500/40 hover:bg-navy-800/80 text-primary-300 hover:text-gold-400 text-sm transition-all duration-200"
+                      >
+                        <ShareIcon className="w-4 h-4" />
+                        {shareLabel}
+                      </button>
+                      <AnimatePresence>
+                        {shareAnchor && (
+                          <ArticleSharePopover
+                            url={getArticleUrl(id, locale)}
+                            title={article.title}
+                            copyLinkLabel={copyLinkLabel}
+                            linkCopiedLabel={linkCopiedLabel}
+                            anchorRect={shareAnchor}
+                            onClose={() => setShareAnchor(null)}
+                          />
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Gold divider */}
+                    <div className="w-12 h-[2px] bg-gold-500 mb-10" />
+
+                    {/* Body content */}
+                    <div className="prose-article text-primary-300 text-base md:text-lg leading-relaxed whitespace-pre-line space-y-6">
+                      {article.content.split(/\n{2,}/).map((paragraph, i) => (
+                        <p key={i} className="text-primary-300 leading-[1.85]">
+                          {paragraph.trim()}
+                        </p>
+                      ))}
+                    </div>
+
+                    {/* Author signature */}
+                    <footer className="mt-16 pt-8 border-t border-gold-500/20">
+                      <div className="flex items-center gap-4">
+                        <img
+                          src="/avatar_to_circle.png"
+                          alt="Frank Melloul"
+                          className="w-12 h-12 rounded-full object-cover shrink-0 ring-2 ring-gold-500/30"
+                        />
+                        <div>
+                          <p className="text-xs text-primary-500 uppercase tracking-widest mb-0.5">
+                            {byLabel}
+                          </p>
+                          <p className="text-primary-100 font-serif text-lg leading-tight">
+                            Frank Melloul
+                          </p>
+                          <p className="text-primary-500 text-sm mt-0.5">
+                            {roleLabel}
+                          </p>
+                        </div>
+                      </div>
+                    </footer>
+                  </motion.article>
+                </div>
+
+                {/* ── Sidebar ── */}
+                {relatedArticles.length > 0 && (
+                  <motion.aside
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="lg:sticky lg:top-28 self-start"
+                  >
+                    {/* Section header */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <span className="w-5 h-[1px] bg-gold-400 shrink-0" />
+                      <h2 className="text-gold-400 text-xs font-semibold tracking-[0.18em] uppercase">
+                        {mayInterestLabel}
+                      </h2>
+                    </div>
+
+                    <div className="space-y-5">
+                      {relatedArticles.map((rel) => {
+                        const articleHref = locale === "fr"
+                          ? `/fr/communication/articles/${rel.id}`
+                          : `/communication/articles/${rel.id}`;
+                        return (
+                          <Link
+                            key={rel.id}
+                            href={articleHref}
+                            className="group flex gap-3 items-start p-3 rounded-lg border border-gold-500/10 bg-navy-900/40 hover:border-gold-500/30 hover:bg-navy-800/60 transition-all duration-200"
+                          >
+                            {rel.image_path && (
+                              <div className="w-20 h-16 shrink-0 overflow-hidden rounded-md">
+                                <img
+                                  src={getPublicUrl(rel.image_path)}
+                                  alt={rel.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
+                              </div>
+                            )}
+                            <div className="min-w-0">
+                              <time className="text-primary-600 text-[10px] tracking-wider uppercase block mb-1">
+                                {formatDateShort(rel.created_at, locale)}
+                              </time>
+                              <p className="text-primary-200 text-sm leading-snug font-serif group-hover:text-gold-300 transition-colors line-clamp-3">
+                                {rel.title}
+                              </p>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+
+                    {/* Link to all articles */}
+                    <div className="mt-6 pt-5 border-t border-gold-500/10">
+                      <Link
+                        href={backHref}
+                        className="inline-flex items-center gap-1.5 text-gold-500 hover:text-gold-300 text-xs tracking-wider uppercase font-medium transition-colors"
+                      >
+                        <span>{locale === "fr" ? "Voir tous les articles" : "View all articles"}</span>
+                        <span>→</span>
+                      </Link>
+                    </div>
+                  </motion.aside>
+                )}
+              </div>
             </div>
           </>
         ) : null}
