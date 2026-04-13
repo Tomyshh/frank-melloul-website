@@ -14,6 +14,12 @@ function thumbnailUrl(path: string): string {
   return `${base}/storage/v1/object/public/${SUPABASE_MEDIA_BUCKET}/${path}`;
 }
 
+function videoFileUrl(path: string): string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!base) return "";
+  return `${base}/storage/v1/object/public/${SUPABASE_MEDIA_BUCKET}/${path}`;
+}
+
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined };
 };
@@ -96,9 +102,8 @@ export async function generateMetadata({
   };
 }
 
-const defaultSchema = {
-  "@context": "https://schema.org",
-  "@graph": [
+async function buildSchema() {
+  const graph: Record<string, unknown>[] = [
     {
       "@type": "WebPage",
       "@id": `${SITE_URL}/communication#webpage`,
@@ -115,15 +120,75 @@ const defaultSchema = {
         { "@type": "ListItem", position: 2, name: "Communication", item: `${SITE_URL}/communication` },
       ],
     },
-  ],
-};
+  ];
 
-export default function CommunicationPage() {
+  if (!supabase) return { "@context": "https://schema.org", "@graph": graph };
+
+  const [videosRes, articlesRes] = await Promise.all([
+    supabase
+      .from("videos")
+      .select("id,title,title_en,description,description_en,thumbnail_path,video_path,external_url,created_at,updated_at")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: false })
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("articles")
+      .select("id,title,title_en,content,content_en,image_path,created_at,updated_at")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: false })
+      .order("created_at", { ascending: false }),
+  ]);
+
+  const videos = videosRes.data ?? [];
+  const articles = articlesRes.data ?? [];
+
+  videos.forEach((v) => {
+    const title = v.title_en ?? v.title;
+    const desc = v.description_en ?? v.description ?? "";
+    const thumb = v.thumbnail_path ? thumbnailUrl(v.thumbnail_path) : FALLBACK_IMAGE;
+    const contentUrl = v.external_url || (v.video_path ? videoFileUrl(v.video_path) : "");
+
+    graph.push({
+      "@type": "VideoObject",
+      name: title,
+      description: desc || title,
+      thumbnailUrl: thumb,
+      uploadDate: v.created_at,
+      ...(contentUrl && { contentUrl }),
+      url: `${SITE_URL}/communication?video=${v.id}`,
+      publisher: {
+        "@type": "Organization",
+        name: "Melloul & Partners",
+        logo: { "@type": "ImageObject", url: `${SITE_URL}/only_gold_logo.png` },
+      },
+    });
+  });
+
+  if (articles.length > 0) {
+    graph.push({
+      "@type": "ItemList",
+      name: "Articles — Melloul & Partners",
+      numberOfItems: articles.length,
+      itemListElement: articles.map((a, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${SITE_URL}/communication/articles/${a.id}`,
+        name: a.title_en ?? a.title,
+      })),
+    });
+  }
+
+  return { "@context": "https://schema.org", "@graph": graph };
+}
+
+export default async function CommunicationPage() {
+  const schema = await buildSchema();
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(defaultSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
       />
       <CommunicationPageClient />
     </>

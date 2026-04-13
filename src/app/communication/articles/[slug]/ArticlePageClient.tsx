@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
 interface ArticleData {
-  id: string;
+  slug: string;
   title: string;
   content: string;
   image_path: string;
@@ -18,7 +18,7 @@ interface ArticleData {
 }
 
 interface RelatedArticle {
-  id: string;
+  slug: string;
   title: string;
   image_path: string;
   created_at: string;
@@ -48,10 +48,10 @@ function formatDateShort(iso: string, locale: "fr" | "en") {
 }
 
 export default function ArticlePageClient({
-  id,
+  slug,
   locale,
 }: {
-  id: string;
+  slug: string;
   locale: "fr" | "en";
 }) {
   const [article, setArticle] = useState<ArticleData | null>(null);
@@ -65,8 +65,7 @@ export default function ArticlePageClient({
   const backHref = locale === "fr" ? "/fr/communication" : "/communication";
   const backLabel = locale === "fr" ? "← Retour à Communication" : "← Back to Communication";
   const loadingLabel = locale === "fr" ? "Chargement…" : "Loading…";
-  const notFoundLabel =
-    locale === "fr" ? "Article introuvable." : "Article not found.";
+  const notFoundLabel = locale === "fr" ? "Article introuvable." : "Article not found.";
   const byLabel = locale === "fr" ? "Par" : "By";
   const roleLabel =
     locale === "fr"
@@ -77,7 +76,6 @@ export default function ArticlePageClient({
   const linkCopiedLabel = locale === "fr" ? "Lien copié !" : "Link copied to clipboard!";
   const mayInterestLabel = locale === "fr" ? "Peut vous intéresser" : "May Interest You";
   const homeLabel = locale === "fr" ? "Accueil" : "Home";
-  const communicationLabel = "Communication";
   const homeHref = locale === "fr" ? "/fr" : "/";
 
   useEffect(() => {
@@ -89,8 +87,8 @@ export default function ArticlePageClient({
 
     supabase
       .from("articles")
-      .select("id,title,content,title_en,content_en,image_path,created_at")
-      .eq("id", id)
+      .select("slug,title,content,title_en,content_en,image_path,created_at")
+      .eq("slug", slug)
       .eq("is_published", true)
       .single()
       .then(({ data, error }) => {
@@ -100,7 +98,7 @@ export default function ArticlePageClient({
           return;
         }
         const d = data as {
-          id: string;
+          slug: string;
           title: string;
           content: string;
           title_en: string | null;
@@ -109,7 +107,7 @@ export default function ArticlePageClient({
           created_at: string;
         };
         setArticle({
-          id: d.id,
+          slug: d.slug,
           title: locale === "en" ? (d.title_en ?? d.title) : d.title,
           content: locale === "en" ? (d.content_en ?? d.content) : d.content,
           image_path: d.image_path,
@@ -119,23 +117,23 @@ export default function ArticlePageClient({
 
     supabase
       .from("articles")
-      .select("id,title,title_en,image_path,created_at")
+      .select("slug,title,title_en,image_path,created_at")
       .eq("is_published", true)
-      .neq("id", id)
+      .neq("slug", slug)
       .order("created_at", { ascending: false })
       .limit(4)
       .then(({ data }) => {
         if (!data) return;
         setRelatedArticles(
-          data.map((a: { id: string; title: string; title_en: string | null; image_path: string; created_at: string }) => ({
-            id: a.id,
+          data.map((a: { slug: string; title: string; title_en: string | null; image_path: string; created_at: string }) => ({
+            slug: a.slug,
             title: locale === "en" ? (a.title_en ?? a.title) : a.title,
             image_path: a.image_path,
             created_at: a.created_at,
           }))
         );
       });
-  }, [id, locale]);
+  }, [slug, locale]);
 
   return (
     <>
@@ -187,7 +185,7 @@ export default function ArticlePageClient({
                   <li className="text-primary-700">/</li>
                   <li>
                     <Link href={backHref} className="hover:text-gold-400 transition-colors">
-                      {communicationLabel}
+                      Communication
                     </Link>
                   </li>
                   <li className="text-primary-700">/</li>
@@ -202,7 +200,6 @@ export default function ArticlePageClient({
 
                 {/* ── Main content ── */}
                 <div>
-                  {/* Back link */}
                   <motion.div
                     initial={{ opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -253,7 +250,7 @@ export default function ArticlePageClient({
                       <AnimatePresence>
                         {shareAnchor && (
                           <ArticleSharePopover
-                            url={getArticleUrl(id, locale)}
+                            url={getArticleUrl(slug, locale)}
                             title={article.title}
                             copyLinkLabel={copyLinkLabel}
                             linkCopiedLabel={linkCopiedLabel}
@@ -308,7 +305,6 @@ export default function ArticlePageClient({
                     transition={{ duration: 0.6, delay: 0.3 }}
                     className="lg:sticky lg:top-28 self-start"
                   >
-                    {/* Section header */}
                     <div className="flex items-center gap-3 mb-6">
                       <span className="w-5 h-[1px] bg-gold-400 shrink-0" />
                       <h2 className="text-gold-400 text-xs font-semibold tracking-[0.18em] uppercase">
@@ -319,11 +315,11 @@ export default function ArticlePageClient({
                     <div className="space-y-5">
                       {relatedArticles.map((rel) => {
                         const articleHref = locale === "fr"
-                          ? `/fr/communication/articles/${rel.id}`
-                          : `/communication/articles/${rel.id}`;
+                          ? `/fr/communication/articles/${rel.slug}`
+                          : `/communication/articles/${rel.slug}`;
                         return (
                           <Link
-                            key={rel.id}
+                            key={rel.slug}
                             href={articleHref}
                             className="group flex gap-3 items-start p-3 rounded-lg border border-gold-500/10 bg-navy-900/40 hover:border-gold-500/30 hover:bg-navy-800/60 transition-all duration-200"
                           >
@@ -349,7 +345,6 @@ export default function ArticlePageClient({
                       })}
                     </div>
 
-                    {/* Link to all articles */}
                     <div className="mt-6 pt-5 border-t border-gold-500/10">
                       <Link
                         href={backHref}
@@ -373,10 +368,10 @@ export default function ArticlePageClient({
 
 /* ------------------------------------------------------------------ */
 
-function getArticleUrl(id: string, locale: "fr" | "en") {
+function getArticleUrl(slug: string, locale: "fr" | "en") {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const prefix = locale === "fr" ? "/fr" : "";
-  return `${origin}${prefix}/communication/articles/${id}`;
+  return `${origin}${prefix}/communication/articles/${slug}`;
 }
 
 /* ------------------------------------------------------------------ */

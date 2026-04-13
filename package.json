@@ -11,6 +11,13 @@
   "dependencies": {
     "@studio-freight/lenis": "^1.0.42",
     "@supabase/supabase-js": "^2.93.2",
+    "@tiptap/extension-link": "^3.22.3",
+    "@tiptap/extension-placeholder": "^3.22.3",
+    "@tiptap/extension-text-align": "^3.22.3",
+    "@tiptap/extension-underline": "^3.22.3",
+    "@tiptap/pm": "^3.22.3",
+    "@tiptap/react": "^3.22.3",
+    "@tiptap/starter-kit": "^3.22.3",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.9",
     "gsap": "^3.12.5",

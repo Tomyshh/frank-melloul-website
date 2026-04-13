@@ -22,6 +22,7 @@ type VideoRow = {
 
 type ArticleRow = {
   id: string;
+  slug: string;
   title: string;
   content: string;
   title_en?: string | null;
@@ -53,9 +54,20 @@ function shareVideo(videoId: string) {
   });
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
 function getArticleShareUrl(article: ArticleRow) {
   if (article.external_url) return article.external_url;
-  return `https://melloulandpartners.com/communication/articles/${article.id}`;
+  return `https://melloulandpartners.com/communication/articles/${article.slug}`;
 }
 
 function AdminSharePopover({
@@ -1406,6 +1418,8 @@ function ArticleForm({
   const [content, setContent] = useState(initial?.content ?? "");
   const [titleEn, setTitleEn] = useState(initial?.title_en ?? "");
   const [contentEn, setContentEn] = useState(initial?.content_en ?? "");
+  const [slug, setSlug] = useState(initial?.slug ?? "");
+  const [slugEdited, setSlugEdited] = useState(Boolean(initial?.slug));
   const [isPublished, setIsPublished] = useState(initial?.is_published ?? true);
   const [sortOrder, setSortOrder] = useState<number>(initial?.sort_order ?? 0);
   const [externalUrl, setExternalUrl] = useState(initial?.external_url ?? "");
@@ -1414,6 +1428,16 @@ function ArticleForm({
   const [fetchingOg, setFetchingOg] = useState(false);
   const [saving, setSaving] = useState(false);
   const isCreate = mode === "create";
+
+  const handleTitleEnChange = (value: string) => {
+    setTitleEn(value);
+    if (!slugEdited) setSlug(slugify(value || title));
+  };
+
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    if (!slugEdited && !titleEn) setSlug(slugify(value));
+  };
 
   const fetchOgImage = async () => {
     if (!externalUrl.trim()) {
@@ -1461,14 +1485,19 @@ function ArticleForm({
           if (transRes.ok) {
             const t = await transRes.json();
             if (t.titleFr) setTitle(t.titleFr);
-            if (t.titleEn) setTitleEn(t.titleEn);
+            if (t.titleEn) {
+              setTitleEn(t.titleEn);
+              if (!slugEdited) setSlug(slugify(t.titleEn));
+            }
             toast.success("Image et titre récupérés et traduits !");
           } else {
             setTitle(ogTitle);
+            if (!slugEdited) setSlug(slugify(ogTitle));
             toast.success("Image récupérée (traduction indisponible).");
           }
         } catch {
           setTitle(ogTitle);
+          if (!slugEdited) setSlug(slugify(ogTitle));
           toast.success("Image récupérée (traduction indisponible).");
         }
       } else {
@@ -1488,6 +1517,11 @@ function ArticleForm({
 
     if (!externalUrl.trim() && !content.trim()) {
       toast.error("Le contenu est requis si aucun lien externe n'est renseigné.");
+      return;
+    }
+
+    if (!slug.trim()) {
+      toast.error("Le slug est requis.");
       return;
     }
 
@@ -1529,6 +1563,7 @@ function ArticleForm({
         content,
         title_en: titleEn || null,
         content_en: contentEn || null,
+        slug: slug.trim(),
         image_path: nextImagePath,
         external_url: externalUrl.trim() || null,
         is_published: isPublished,
@@ -1643,7 +1678,7 @@ function ArticleForm({
             </label>
             <input
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => handleTitleChange(e.target.value)}
               required
               className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
               placeholder="Titre de l’article"
@@ -1674,7 +1709,7 @@ function ArticleForm({
             </label>
             <input
               value={titleEn}
-              onChange={(e) => setTitleEn(e.target.value)}
+              onChange={(e) => handleTitleEnChange(e.target.value)}
               className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100"
               placeholder="Article title"
             />
@@ -1692,6 +1727,25 @@ function ArticleForm({
               />
             </div>
           )}
+        </div>
+
+        <div className="md:col-span-2 space-y-3 pt-2 border-b border-gold-500/10 pb-4">
+          <div className="text-xs tracking-wider text-primary-500 uppercase font-medium">
+            URL Slug
+          </div>
+          <div className="space-y-1">
+            <label className="block text-xs tracking-wider text-primary-400 uppercase">
+              Slug (URL)
+            </label>
+            <input
+              value={slug}
+              onChange={(e) => { setSlug(e.target.value); setSlugEdited(true); }}
+              required
+              className="w-full rounded-lg bg-navy-900/50 border border-gold-500/10 focus:border-gold-500/40 outline-none px-3 py-2 text-primary-100 font-mono text-sm"
+              placeholder="iran-the-end-of-the-military-phase"
+            />
+            <p className="text-primary-600 text-xs">URL: /communication/articles/{slug || "..."}</p>
+          </div>
         </div>
 
         <div className="space-y-2">

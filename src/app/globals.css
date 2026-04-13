@@ -389,3 +389,139 @@ body {
   animation: arrowBounce 1.5s ease-in-out infinite;
 }
 
+/* ── Éditeur riche TipTap & rendu article ── */
+.rich-editor-content .tiptap,
+.article-rich-content {
+  color: #c9d0e0;
+  line-height: 1.85;
+  font-size: 1rem;
+}
+
+/* Titres */
+.rich-editor-content .tiptap h1,
+.article-rich-content h1 {
+  font-size: 2rem;
+  line-height: 1.25;
+  font-weight: 700;
+  color: #f0f2f7;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-serif, Georgia, serif);
+}
+
+.rich-editor-content .tiptap h2,
+.article-rich-content h2 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 600;
+  color: #e5e9f4;
+  margin-top: 1.75rem;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-serif, Georgia, serif);
+}
+
+.rich-editor-content .tiptap h3,
+.article-rich-content h3 {
+  font-size: 1.2rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: #d4b97a;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+/* Paragraphes */
+.rich-editor-content .tiptap p,
+.article-rich-content p {
+  margin-bottom: 1.1rem;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+
+/* Gras / italique / souligné / barré */
+.rich-editor-content .tiptap strong,
+.article-rich-content strong { color: #e8ecf6; font-weight: 700; }
+
+.rich-editor-content .tiptap em,
+.article-rich-content em { font-style: italic; }
+
+.rich-editor-content .tiptap u,
+.article-rich-content u { text-decoration-color: #d4b97a; }
+
+.rich-editor-content .tiptap s,
+.article-rich-content s { color: #6b7490; }
+
+/* Listes */
+.rich-editor-content .tiptap ul,
+.article-rich-content ul {
+  list-style: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+  space-y: 0.25rem;
+}
+
+.rich-editor-content .tiptap ol,
+.article-rich-content ol {
+  list-style: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.rich-editor-content .tiptap li,
+.article-rich-content li {
+  margin-bottom: 0.35rem;
+  padding-left: 0.25rem;
+}
+
+/* Citation */
+.rich-editor-content .tiptap blockquote,
+.article-rich-content blockquote {
+  border-left: 3px solid #d4b97a;
+  padding: 0.5rem 1rem;
+  margin: 1.25rem 0;
+  color: #9ba3be;
+  font-style: italic;
+  background: rgba(212, 185, 122, 0.05);
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+/* Code */
+.rich-editor-content .tiptap code,
+.article-rich-content code {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.88em;
+  color: #d4b97a;
+  font-family: ui-monospace, monospace;
+}
+
+/* Alignement */
+.rich-editor-content .tiptap [style*="text-align: center"],
+.article-rich-content [style*="text-align: center"] { text-align: center; }
+
+.rich-editor-content .tiptap [style*="text-align: right"],
+.article-rich-content [style*="text-align: right"] { text-align: right; }
+
+/* Liens */
+.rich-editor-content .tiptap a,
+.article-rich-content a {
+  color: #d4b97a;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+.rich-editor-content .tiptap a:hover,
+.article-rich-content a:hover { color: #e8d4a0; }
+
+/* Règle horizontale */
+.rich-editor-content .tiptap hr,
+.article-rich-content hr {
+  border: none;
+  border-top: 1px solid rgba(212, 185, 122, 0.2);
+  margin: 1.5rem 0;
+}
+
