@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
+import { htmlToPlainText } from "@/lib/utils";
 import { toast } from "sonner";
 
 const pageTranslations = {
@@ -28,6 +29,7 @@ const pageTranslations = {
     copyLink: "Copy link",
     tapToUnmute: "Tap to unmute",
     readArticle: "Read article",
+    externalLink: "Link",
   },
   fr: {
     title: "Communication",
@@ -45,6 +47,7 @@ const pageTranslations = {
     copyLink: "Copier le lien",
     tapToUnmute: "Activer le son",
     readArticle: "Lire l'article",
+    externalLink: "Lien",
   },
 } as const;
 
@@ -539,7 +542,9 @@ function VideoCard({
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
               />
             </svg>
-            <span className="text-white text-[10px] font-medium">Lien</span>
+            <span className="text-white text-[10px] font-medium">
+              {t.externalLink}
+            </span>
           </div>
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -876,7 +881,9 @@ function ArticleCard({
               d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
             />
           </svg>
-          <span className="text-white text-[10px] font-medium">Lien</span>
+          <span className="text-white text-[10px] font-medium">
+            {t.externalLink}
+          </span>
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-navy-950/60 to-transparent pointer-events-none" />
@@ -919,7 +926,7 @@ function ArticleCard({
 
       {article.content ? (
         <p className="text-xs md:text-sm text-primary-400 line-clamp-3 mb-2 whitespace-pre-line">
-          {article.content}
+          {htmlToPlainText(article.content)}
         </p>
       ) : null}
 

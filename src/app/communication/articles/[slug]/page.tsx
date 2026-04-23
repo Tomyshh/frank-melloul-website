@@ -3,6 +3,7 @@ import { supabase, SUPABASE_MEDIA_BUCKET } from "@/lib/supabaseClient";
 import { isUUID } from "@/lib/articleQuery";
 import { permanentRedirect } from "next/navigation";
 import ArticlePageClient from "@/app/communication/articles/[slug]/ArticlePageClient";
+import { excerptFromHtml } from "@/lib/utils";
 
 const SITE_URL = "https://melloulandpartners.com";
 const FALLBACK_IMAGE = `${SITE_URL}/logo-gold.png`;
@@ -15,13 +16,8 @@ function imageUrl(path: string) {
   return `${base}/storage/v1/object/public/${SUPABASE_MEDIA_BUCKET}/${path}`;
 }
 
-function toPlainText(value: string): string {
-  return value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-}
-
 function cutText(value: string, max: number): string {
-  const plain = toPlainText(value);
-  return plain.length > max ? `${plain.slice(0, max - 1)}…` : plain;
+  return excerptFromHtml(value, max);
 }
 
 type Props = { params: { slug: string } };
